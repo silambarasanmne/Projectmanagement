@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Lock, User, ArrowRight, Building, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { Lock, User, ArrowRight, Building, Eye, EyeOff, Sparkles, AlertCircle } from 'lucide-react';
 
 export const LoginPage = () => {
   const { login } = useApp();
@@ -8,27 +8,37 @@ export const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleLoginSubmit = (e) => {
     if (e) e.preventDefault();
-    const userToLogin = username || 'admin';
-    const passToLogin = password || 'Admin@123';
+    setErrorMessage('');
+
+    const userToLogin = (username || 'admin').trim();
+    const passToLogin = (password || 'Admin@123').trim();
 
     setIsLoading(true);
     setTimeout(() => {
-      login(userToLogin, passToLogin);
+      const res = login(userToLogin, passToLogin);
       setIsLoading(false);
-    }, 300);
+      if (res && res.error) {
+        setErrorMessage(res.error);
+      }
+    }, 250);
   };
 
   const handleQuickDemoLogin = (user, pass) => {
     setUsername(user);
     setPassword(pass);
+    setErrorMessage('');
     setIsLoading(true);
     setTimeout(() => {
-      login(user, pass);
+      const res = login(user, pass);
       setIsLoading(false);
-    }, 200);
+      if (res && res.error) {
+        setErrorMessage(res.error);
+      }
+    }, 150);
   };
 
   return (
@@ -49,6 +59,14 @@ export const LoginPage = () => {
           <p className="text-xs text-slate-400">Corporate Multi-Company Governance Portal</p>
         </div>
 
+        {/* Visible Error Banner for Mobile Browser visibility */}
+        {errorMessage && (
+          <div className="p-3.5 rounded-2xl bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs flex items-center gap-2.5 shadow-lg animate-fade-in">
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            <span className="font-medium">{errorMessage}</span>
+          </div>
+        )}
+
         {/* Clean Mobile-Optimized Login Form */}
         <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs">
           
@@ -66,7 +84,10 @@ export const LoginPage = () => {
                 spellCheck="false"
                 autoComplete="username"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  if (errorMessage) setErrorMessage('');
+                }}
                 placeholder="admin"
                 className="w-full glass-input pl-10 pr-4 py-3 rounded-xl text-white font-medium text-sm focus:border-indigo-500"
               />
@@ -87,7 +108,10 @@ export const LoginPage = () => {
                 spellCheck="false"
                 autoComplete="current-password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errorMessage) setErrorMessage('');
+                }}
                 placeholder="••••••••••••"
                 className="w-full glass-input pl-10 pr-10 py-3 rounded-xl text-white text-sm focus:border-indigo-500"
               />
@@ -123,7 +147,7 @@ export const LoginPage = () => {
           <div className="flex items-center justify-between text-[11px]">
             <span className="text-slate-400 font-semibold flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>Mobile 1-Tap Sign In</span>
+              <span>Mobile 1-Tap Instant Access</span>
             </span>
             <span className="text-slate-500 font-mono text-[10px]">admin / Admin@123</span>
           </div>
@@ -131,10 +155,10 @@ export const LoginPage = () => {
           <button
             type="button"
             onClick={() => handleQuickDemoLogin('admin', 'Admin@123')}
-            className="w-full py-2.5 px-3 rounded-xl bg-indigo-600/20 hover:bg-indigo-600 text-indigo-200 border border-indigo-500/30 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-[0.98]"
+            className="w-full py-3 px-3 rounded-xl bg-gradient-to-r from-indigo-600/30 to-violet-600/30 hover:from-indigo-600 hover:to-violet-600 text-white border border-indigo-500/40 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md active:scale-[0.98]"
           >
             <User className="w-3.5 h-3.5 text-indigo-300" />
-            <span>⚡ Instant Mobile Sign In (Super Admin)</span>
+            <span>⚡ 1-Tap Mobile Sign In (Super Admin)</span>
           </button>
         </div>
 
