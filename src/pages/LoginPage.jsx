@@ -14,17 +14,23 @@ export const LoginPage = () => {
     if (e) e.preventDefault();
     setErrorMessage('');
 
-    const userToLogin = (username || 'admin').trim();
-    const passToLogin = (password || 'Admin@123').trim();
+    // Extract input directly from DOM elements to handle iOS/Android Keychain & Chrome Autofill
+    const form = e?.target;
+    const domUsername = form?.elements?.username?.value || username;
+    const domPassword = form?.elements?.password?.value || password;
+
+    const userToLogin = (domUsername || username || 'admin').trim();
+    const passToLogin = (domPassword || password || 'Admin@123').trim();
 
     setIsLoading(true);
-    setTimeout(() => {
-      const res = login(userToLogin, passToLogin);
-      setIsLoading(false);
-      if (res && res.error) {
-        setErrorMessage(res.error);
-      }
-    }, 250);
+    
+    // Execute login synchronously to ensure iOS Safari touch tick updates state before virtual keyboard dismiss
+    const res = login(userToLogin, passToLogin);
+    setIsLoading(false);
+    
+    if (res && res.error) {
+      setErrorMessage(res.error);
+    }
   };
 
   const handleQuickDemoLogin = (user, pass) => {
@@ -32,13 +38,13 @@ export const LoginPage = () => {
     setPassword(pass);
     setErrorMessage('');
     setIsLoading(true);
-    setTimeout(() => {
-      const res = login(user, pass);
-      setIsLoading(false);
-      if (res && res.error) {
-        setErrorMessage(res.error);
-      }
-    }, 150);
+    
+    const res = login(user, pass);
+    setIsLoading(false);
+    
+    if (res && res.error) {
+      setErrorMessage(res.error);
+    }
   };
 
   return (
@@ -68,7 +74,12 @@ export const LoginPage = () => {
         )}
 
         {/* Clean Mobile-Optimized Login Form */}
-        <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs">
+        <form 
+          onSubmit={handleLoginSubmit} 
+          action="javascript:void(0);" 
+          method="post"
+          className="space-y-4 text-xs"
+        >
           
           <div>
             <label className="block text-slate-300 font-semibold mb-1">Username or Email *</label>
