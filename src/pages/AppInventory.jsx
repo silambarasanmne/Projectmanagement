@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { CreateAppModal } from '../components/Modals/CreateAppModal';
 import { Layers, Globe, Smartphone, Code2, Plus, ExternalLink, Trash2 } from 'lucide-react';
 
 export const AppInventory = ({ onOpenModal }) => {
   const { applications, deleteApplication } = useApp();
   const [filterType, setFilterType] = useState('All');
+  const [isAppModalOpen, setIsAppModalOpen] = useState(false);
 
   const filteredApps = applications.filter(a => {
     if (filterType === 'All') return true;
@@ -26,11 +28,11 @@ export const AppInventory = ({ onOpenModal }) => {
         </div>
 
         <button
-          onClick={() => onOpenModal('release')}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold text-xs shadow-lg shadow-violet-600/30 hover:from-violet-500 hover:to-indigo-500 transition-all shrink-0"
+          onClick={() => setIsAppModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold text-xs shadow-lg shadow-violet-600/30 hover:from-violet-500 hover:to-indigo-500 transition-all shrink-0 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          <span>Upload Application Build</span>
+          <span>Create Application</span>
         </button>
       </div>
 
@@ -50,6 +52,15 @@ export const AppInventory = ({ onOpenModal }) => {
           </button>
         ))}
       </div>
+
+      {/* Empty State */}
+      {filteredApps.length === 0 && (
+        <div className="glass-panel p-10 rounded-3xl border border-slate-800 text-center space-y-3">
+          <Layers className="w-10 h-10 text-slate-600 mx-auto" />
+          <p className="text-sm font-semibold text-white">No Applications Registered Yet</p>
+          <p className="text-xs text-slate-400">Click "Create Application" to add your first web app, APK, or API asset.</p>
+        </div>
+      )}
 
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -123,6 +134,12 @@ export const AppInventory = ({ onOpenModal }) => {
           </div>
         ))}
       </div>
+
+      {/* Create App Modal */}
+      <CreateAppModal
+        isOpen={isAppModalOpen}
+        onClose={() => setIsAppModalOpen(false)}
+      />
 
     </div>
   );

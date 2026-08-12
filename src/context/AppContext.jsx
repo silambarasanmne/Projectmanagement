@@ -261,6 +261,17 @@ export const AppProvider = ({ children }) => {
     logActivity(currentUser?.name, `Deleted project "${targetProj?.name}"`, 'Projects');
   };
 
+  const addApplication = (appData) => {
+    const newApp = {
+      id: `app-${Date.now()}`,
+      status: 'Active',
+      ...appData
+    };
+    setApplications((prev) => [newApp, ...prev]);
+    addToast('success', 'Application Created', `Application "${newApp.name}" added to catalog.`);
+    logActivity(currentUser?.name, `Created application "${newApp.name}" (${newApp.type})`, 'Applications');
+  };
+
   const deleteApplication = (appId) => {
     const targetApp = applications.find(a => a.id === appId);
     setApplications(prev => prev.filter(a => a.id !== appId));
@@ -450,6 +461,7 @@ export const AppProvider = ({ children }) => {
         addProject,
         updateProjectStatus,
         deleteProject,
+        addApplication,
         deleteApplication,
         addRelease,
         deleteRelease,

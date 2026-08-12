@@ -2,7 +2,6 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 import { StatCard } from '../components/StatCard';
 import { ProjectStatusChart } from '../components/Charts/ProjectStatusChart';
-import { MonthlyActivityChart } from '../components/Charts/MonthlyActivityChart';
 import { 
   Building, 
   FolderKanban, 
@@ -14,7 +13,8 @@ import {
   Clock, 
   Sparkles,
   Package,
-  Activity
+  Activity,
+  TestTube
 } from 'lucide-react';
 
 export const Dashboard = ({ onOpenModal }) => {
@@ -26,13 +26,13 @@ export const Dashboard = ({ onOpenModal }) => {
     users, 
     releases, 
     activities, 
-    navigateTo,
-    setActiveCompanyId
+    navigateTo
   } = useApp();
 
   const activeCompanies = companies.filter(c => c.id !== 'all');
   const totalProjects = allProjects.length;
   const inProcessProjects = allProjects.filter(p => p.status === 'In Process').length;
+  const testingProjects = allProjects.filter(p => p.status === 'Testing').length;
   const releaseProjects = allProjects.filter(p => p.status === 'Release' || p.status === 'Completed').length;
 
   return (
@@ -79,53 +79,53 @@ export const Dashboard = ({ onOpenModal }) => {
         </div>
       </div>
 
-      {/* Dynamic KPI Metrics Cards */}
+      {/* Dynamic KPI Metrics Cards with Direct Redirection */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
-        {/* Total Group Companies */}
-        <div onClick={() => navigateTo('companies')} className="cursor-pointer">
+        {/* Total Group Companies - Redirects to Group Companies */}
+        <div onClick={() => navigateTo('companies')} className="cursor-pointer transition-transform hover:scale-[1.02]">
           <StatCard
             title="Group Companies"
             value={activeCompanies.length}
             icon={Building}
-            subtitle={`${activeCompanies.length} Registered Entities`}
-            trend="Active Subsidiaries"
+            subtitle={`${activeCompanies.length} Subsidiaries`}
+            trend="Click to View Companies"
             color="indigo"
           />
         </div>
 
-        {/* Managed Personnel / Employees */}
-        <div onClick={() => navigateTo('team')} className="cursor-pointer">
+        {/* Managed Personnel / Employees - Redirects to Team Directory */}
+        <div onClick={() => navigateTo('team')} className="cursor-pointer transition-transform hover:scale-[1.02]">
           <StatCard
             title="Registered Team"
             value={users.length}
             icon={Users}
             subtitle={`${users.length} Personnel Accounts`}
-            trend="Employee Directory"
+            trend="Click to View Team"
             color="emerald"
           />
         </div>
 
-        {/* Total Projects */}
-        <div onClick={() => navigateTo('projects')} className="cursor-pointer">
+        {/* Total Projects - Redirects to Projects Workspace */}
+        <div onClick={() => navigateTo('projects')} className="cursor-pointer transition-transform hover:scale-[1.02]">
           <StatCard
             title="Managed Projects"
             value={totalProjects}
             icon={FolderKanban}
-            subtitle={`${inProcessProjects} In Process • ${releaseProjects} Released`}
-            trend="Project Portfolio"
+            subtitle={`${inProcessProjects} Process • ${testingProjects} Testing • ${releaseProjects} Released`}
+            trend="Click to View Projects"
             color="violet"
           />
         </div>
 
-        {/* Active Software Apps */}
-        <div onClick={() => navigateTo('applications')} className="cursor-pointer">
+        {/* Active Software Apps - Redirects to Application Catalog */}
+        <div onClick={() => navigateTo('applications')} className="cursor-pointer transition-transform hover:scale-[1.02]">
           <StatCard
             title="Application Assets"
             value={allApplications.length}
             icon={Layers}
             subtitle={`${releases.length} Release Packages`}
-            trend="Software Assets"
+            trend="Click to View Portfolio"
             color="amber"
           />
         </div>
@@ -133,18 +133,18 @@ export const Dashboard = ({ onOpenModal }) => {
       </div>
 
       {/* Status Progress Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         {/* In Process Card */}
-        <div className="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4">
+        <div className="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4 flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
                 <Clock className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-heading font-bold text-white text-base">Projects In Process</h3>
-                <p className="text-xs text-slate-400">Active development & design phases</p>
+                <h3 className="font-heading font-bold text-white text-base">In Process</h3>
+                <p className="text-xs text-slate-400">Active development</p>
               </div>
             </div>
             <span className="font-heading font-extrabold text-2xl text-indigo-400">{inProcessProjects}</span>
@@ -152,23 +152,47 @@ export const Dashboard = ({ onOpenModal }) => {
 
           <button
             onClick={() => navigateTo('projects')}
-            className="w-full py-2.5 rounded-xl bg-indigo-600/15 hover:bg-indigo-600 text-indigo-200 border border-indigo-500/30 text-xs font-semibold flex items-center justify-center gap-2 transition-all"
+            className="w-full py-2.5 rounded-xl bg-indigo-600/15 hover:bg-indigo-600 text-indigo-200 border border-indigo-500/30 text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
             <span>Browse In Process Projects</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
+        {/* Testing Phase Card */}
+        <div className="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4 flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-600/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                <TestTube className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-heading font-bold text-white text-base">In Testing</h3>
+                <p className="text-xs text-slate-400">QA testing & verification</p>
+              </div>
+            </div>
+            <span className="font-heading font-extrabold text-2xl text-amber-400">{testingProjects}</span>
+          </div>
+
+          <button
+            onClick={() => navigateTo('projects')}
+            className="w-full py-2.5 rounded-xl bg-amber-600/15 hover:bg-amber-600 text-amber-200 border border-amber-500/30 text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
+          >
+            <span>Browse Testing Projects</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
         {/* Released Card */}
-        <div className="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4">
+        <div className="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4 flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
                 <CheckCircle2 className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-heading font-bold text-white text-base">Released Projects</h3>
-                <p className="text-xs text-slate-400">Deployed to production or app stores</p>
+                <h3 className="font-heading font-bold text-white text-base">Released</h3>
+                <p className="text-xs text-slate-400">Production deployed</p>
               </div>
             </div>
             <span className="font-heading font-extrabold text-2xl text-emerald-400">{releaseProjects}</span>
@@ -176,7 +200,7 @@ export const Dashboard = ({ onOpenModal }) => {
 
           <button
             onClick={() => navigateTo('projects')}
-            className="w-full py-2.5 rounded-xl bg-emerald-600/15 hover:bg-emerald-600 text-emerald-200 border border-emerald-500/30 text-xs font-semibold flex items-center justify-center gap-2 transition-all"
+            className="w-full py-2.5 rounded-xl bg-emerald-600/15 hover:bg-emerald-600 text-emerald-200 border border-emerald-500/30 text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
             <span>Browse Released Projects</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -191,7 +215,7 @@ export const Dashboard = ({ onOpenModal }) => {
         {/* Project Status Breakdown Chart */}
         <div className="lg:col-span-2 glass-panel p-6 rounded-3xl border border-slate-800 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-heading font-bold text-white text-base">Project Status Breakdown</h3>
+            <h3 className="font-heading font-bold text-white text-base">Project Status Distribution</h3>
             <span className="text-xs text-slate-400 font-medium">Real-time status tracking</span>
           </div>
 
@@ -207,7 +231,7 @@ export const Dashboard = ({ onOpenModal }) => {
             </div>
             <button
               onClick={() => navigateTo('audit')}
-              className="text-[11px] text-indigo-400 hover:underline font-semibold"
+              className="text-[11px] text-indigo-400 hover:underline font-semibold cursor-pointer"
             >
               View All
             </button>
