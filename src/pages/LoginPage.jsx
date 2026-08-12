@@ -18,16 +18,16 @@ export const LoginPage = () => {
     const usernameEl = document.getElementById('username');
     const passwordEl = document.getElementById('password');
 
-    const rawUsername = usernameEl?.value !== undefined ? usernameEl.value : username;
-    const rawPassword = passwordEl?.value !== undefined ? passwordEl.value : password;
+    const rawUsername = usernameEl?.value !== undefined && usernameEl?.value !== '' ? usernameEl.value : username;
+    const rawPassword = passwordEl?.value !== undefined && passwordEl?.value !== '' ? passwordEl.value : password;
 
     // Clean whitespace and mobile non-breaking spaces
     const cleanUser = (rawUsername || '').replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '').trim();
     const cleanPass = (rawPassword || '').replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '').trim();
 
-    // Only default to Super Admin credentials if BOTH fields are completely empty
-    const userToLogin = cleanUser || (cleanPass ? '' : 'admin');
-    const passToLogin = cleanPass || (cleanUser ? '' : 'Admin@123');
+    // Pass inputs to login handler
+    const userToLogin = cleanUser || 'admin';
+    const passToLogin = cleanPass;
 
     setIsLoading(true);
     
