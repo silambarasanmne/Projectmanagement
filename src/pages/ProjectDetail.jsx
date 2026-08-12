@@ -198,6 +198,23 @@ export const ProjectDetail = () => {
                 <span>Assigned QA Tester: <strong className="text-white">{project.assignedTesterName}</strong></span>
               </div>
             )}
+            {project.testingUrl && (
+              <div className="mt-3 p-3 rounded-2xl bg-amber-950/30 border border-amber-500/30 flex items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2 text-amber-200">
+                  <Globe className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span>Staging Testing URL: <strong className="text-white font-mono">{project.testingUrl}</strong></span>
+                </div>
+                <a
+                  href={project.testingUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-600/30 transition-all shrink-0 cursor-pointer"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Open App for Testing</span>
+                </a>
+              </div>
+            )}
             {project.testResult === 'Failed' && project.failedReason && (
               <div className="mt-2 p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-xs text-rose-300">
                 <strong>⚠️ Previous Testing Failed:</strong> {project.failedReason}

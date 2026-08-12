@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { X, TestTube, Sparkles, UserCheck } from 'lucide-react';
+import { X, TestTube, Sparkles, UserCheck, Globe } from 'lucide-react';
 
 export const MoveToTestingModal = ({ isOpen, onClose, project }) => {
   const { users, updateProjectStatus, addNotification, addToast, logActivity, currentUser } = useApp();
   const [assignedTester, setAssignedTester] = useState('');
+  const [testingUrl, setTestingUrl] = useState('');
   const [testingNotes, setTestingNotes] = useState('Development process completed. Ready for QA testing & security verification.');
 
   if (!isOpen || !project) return null;
@@ -15,9 +16,12 @@ export const MoveToTestingModal = ({ isOpen, onClose, project }) => {
     const testerName = selectedUserObj?.name || assignedTester || 'QA Lead';
     const testerId = selectedUserObj?.id || '';
 
+    const urlToTest = testingUrl.trim() || `https://staging.${project.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.apexgroup.com`;
+
     updateProjectStatus(project.id, 'Testing Assigned', {
       assignedTesterId: testerId,
       assignedTesterName: testerName,
+      testingUrl: urlToTest,
       testingNotes: testingNotes,
       developerId: currentUser?.id,
       developerName: currentUser?.name || 'Developer'
@@ -28,7 +32,7 @@ export const MoveToTestingModal = ({ isOpen, onClose, project }) => {
       targetUserName: testerName,
       fromUser: currentUser?.name || 'Developer',
       title: 'Testing Assigned',
-      message: `You have been assigned to test "${project.name}". Please conduct QA and mark Testing Completed.`,
+      message: `You have been assigned to test "${project.name}". Testing URL: ${urlToTest}`,
       type: 'testing_assigned',
       projectId: project.id
     });
@@ -92,6 +96,21 @@ export const MoveToTestingModal = ({ isOpen, onClose, project }) => {
                   </option>
                 ))}
               </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1">Testing / Staging Application URL *</label>
+            <div className="relative">
+              <Globe className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+              <input
+                type="url"
+                required
+                value={testingUrl}
+                onChange={(e) => setTestingUrl(e.target.value)}
+                placeholder="https://staging.apexgroup.com or http://localhost:5173"
+                className="w-full glass-input pl-10 pr-4 py-2.5 rounded-xl text-amber-300 font-semibold text-xs"
+              />
             </div>
           </div>
 
