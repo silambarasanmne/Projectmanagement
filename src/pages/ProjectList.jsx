@@ -151,53 +151,69 @@ export const ProjectList = ({ onOpenModal }) => {
               </div>
             </div>
 
-            {/* Action Buttons Workflow Pipeline: In Process -> Testing -> Release */}
-            <div className="grid grid-cols-4 gap-1 pt-2 border-t border-slate-800/80">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  updateProjectStatus(p.id, 'In Process');
-                }}
-                disabled={p.status === 'In Process'}
-                className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-[9px] font-bold bg-indigo-600/20 hover:bg-indigo-600 text-indigo-200 border border-indigo-500/30 transition-all disabled:opacity-40"
-                title="Mark In Process"
-              >
-                <Play className="w-3 h-3 fill-indigo-300" />
-                <span>In Process</span>
-              </button>
+            {/* Action Buttons — Sequential Lifecycle: Only the NEXT valid action is shown */}
+            <div className="flex items-center gap-2 pt-2 border-t border-slate-800/80">
+              
+              {/* New / Pending → Start In Process */}
+              {p.status !== 'In Process' && p.status !== 'Testing' && p.status !== 'Release' && p.status !== 'Completed' && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    updateProjectStatus(p.id, 'In Process');
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold bg-indigo-600/20 hover:bg-indigo-600 text-indigo-200 border border-indigo-500/30 transition-all cursor-pointer"
+                  title="Start In Process"
+                >
+                  <Play className="w-3 h-3 fill-indigo-300" />
+                  <span>Start In Process</span>
+                </button>
+              )}
 
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setTestingModalProject(p);
-                }}
-                disabled={p.status === 'Testing'}
-                className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-[9px] font-bold bg-amber-600/20 hover:bg-amber-600 text-amber-200 border border-amber-500/30 transition-all disabled:opacity-40"
-                title="Move to Testing & Assign QA Employee"
-              >
-                <TestTube className="w-3 h-3" />
-                <span>Testing</span>
-              </button>
+              {/* In Process → Move to Testing */}
+              {p.status === 'In Process' && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setTestingModalProject(p);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold bg-amber-600/20 hover:bg-amber-600 text-amber-200 border border-amber-500/30 transition-all cursor-pointer"
+                  title="Move to Testing & Assign QA Employee"
+                >
+                  <TestTube className="w-3 h-3" />
+                  <span>Move to Testing</span>
+                </button>
+              )}
 
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setReleaseModalProject(p);
-                }}
-                disabled={p.status === 'Release'}
-                className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-[9px] font-bold bg-emerald-600/20 hover:bg-emerald-600 text-emerald-200 border border-emerald-500/30 transition-all disabled:opacity-40"
-                title="Move to Release & Specify Production URL"
-              >
-                <Package className="w-3 h-3" />
-                <span>To Release</span>
-              </button>
+              {/* Testing → Move to Release */}
+              {p.status === 'Testing' && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setReleaseModalProject(p);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold bg-emerald-600/20 hover:bg-emerald-600 text-emerald-200 border border-emerald-500/30 transition-all cursor-pointer"
+                  title="Move to Release & Specify Production URL"
+                >
+                  <Package className="w-3 h-3" />
+                  <span>Move to Release</span>
+                </button>
+              )}
 
+              {/* Released — Completed badge */}
+              {(p.status === 'Release' || p.status === 'Completed') && (
+                <span className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold bg-emerald-600/15 text-emerald-300 border border-emerald-500/30">
+                  <CheckCircle2 className="w-3 h-3" />
+                  <span>Released</span>
+                </span>
+              )}
+
+              {/* Delete is always available */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   if (window.confirm(`Delete project "${p.name}"?`)) deleteProject(p.id);
                 }}
-                className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-[9px] font-bold bg-slate-900 hover:bg-rose-950/60 text-slate-400 hover:text-rose-400 border border-slate-800 hover:border-rose-500/40 transition-all"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold bg-slate-900 hover:bg-rose-950/60 text-slate-400 hover:text-rose-400 border border-slate-800 hover:border-rose-500/40 transition-all ml-auto cursor-pointer"
                 title="Delete Project"
               >
                 <Trash2 className="w-3 h-3" />

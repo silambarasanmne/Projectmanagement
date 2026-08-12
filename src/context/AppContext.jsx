@@ -240,12 +240,22 @@ export const AppProvider = ({ children }) => {
   };
 
   const updateProjectStatus = (id, newStatus, newProgress) => {
+    // Auto-calculate progress based on phase if not explicitly provided
+    const autoProgress = newProgress !== undefined ? newProgress : (
+      newStatus === 'In Process' ? 30 :
+      newStatus === 'Testing' ? 70 :
+      newStatus === 'Release' || newStatus === 'Completed' ? 100 : 0
+    );
+
     setProjects((prev) =>
       prev.map((p) => {
         if (p.id === id) {
-          const updated = { ...p, status: newStatus, lastUpdated: new Date().toISOString().replace('T', ' ').substring(0, 16) };
-          if (newProgress !== undefined) updated.progress = newProgress;
-          return updated;
+          return {
+            ...p,
+            status: newStatus,
+            progress: autoProgress,
+            lastUpdated: new Date().toISOString().replace('T', ' ').substring(0, 16)
+          };
         }
         return p;
       })
