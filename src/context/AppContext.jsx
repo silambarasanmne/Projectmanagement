@@ -165,8 +165,8 @@ export const AppProvider = ({ children }) => {
 
   // Auth Operations
   const login = (username, password) => {
-    const cleanUsername = (username || '').trim().toLowerCase();
-    const cleanPassword = (password || '').trim();
+    const cleanUsername = (username || '').replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '').trim().toLowerCase();
+    const cleanPassword = (password || '').replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '').trim();
 
     // Combine state users, local storage users, and demo users to ensure no account is ever missed
     const storedUsers = safeGetLocalStorage('epm_users', DEMO_USERS);
@@ -176,10 +176,10 @@ export const AppProvider = ({ children }) => {
     const userMap = new Map();
     combinedUsers.forEach(u => {
       if (u && u.username) {
-        userMap.set(u.username.trim().toLowerCase(), u);
+        userMap.set(u.username.replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '').trim().toLowerCase(), u);
       }
       if (u && u.email) {
-        userMap.set(u.email.trim().toLowerCase(), u);
+        userMap.set(u.email.replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '').trim().toLowerCase(), u);
       }
     });
 

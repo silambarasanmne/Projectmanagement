@@ -14,17 +14,24 @@ export const LoginPage = () => {
     if (e) e.preventDefault();
     setErrorMessage('');
 
-    // Extract input directly from DOM elements to handle iOS/Android Keychain & Chrome Autofill
-    const form = e?.target;
-    const domUsername = form?.elements?.username?.value || username;
-    const domPassword = form?.elements?.password?.value || password;
+    // Access DOM input elements directly by ID to handle mobile virtual keyboards and autofill
+    const usernameEl = document.getElementById('username');
+    const passwordEl = document.getElementById('password');
 
-    const userToLogin = (domUsername || username || 'admin').trim();
-    const passToLogin = (domPassword || password || 'Admin@123').trim();
+    const rawUsername = usernameEl?.value !== undefined ? usernameEl.value : username;
+    const rawPassword = passwordEl?.value !== undefined ? passwordEl.value : password;
+
+    // Clean whitespace and mobile non-breaking spaces
+    const cleanUser = (rawUsername || '').replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '').trim();
+    const cleanPass = (rawPassword || '').replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '').trim();
+
+    // Only default to Super Admin credentials if BOTH fields are completely empty
+    const userToLogin = cleanUser || (cleanPass ? '' : 'admin');
+    const passToLogin = cleanPass || (cleanUser ? '' : 'Admin@123');
 
     setIsLoading(true);
     
-    // Execute login synchronously to ensure iOS Safari touch tick updates state before virtual keyboard dismiss
+    // Execute login synchronously for iOS/Android touch event compliance
     const res = login(userToLogin, passToLogin);
     setIsLoading(false);
     
