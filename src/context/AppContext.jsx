@@ -14,10 +14,10 @@ import {
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
-  // Authentication State
+  // Default Authentication State: null so Login Page is default landing page
   const [currentUser, setCurrentUser] = useState(() => {
     const savedUser = localStorage.getItem('epm_user');
-    return savedUser ? JSON.parse(savedUser) : DEMO_USERS[0]; // Default Super Admin for instant preview
+    return savedUser ? JSON.parse(savedUser) : null; // Mandatory Landing Page = Login
   });
 
   // UI States
@@ -29,45 +29,42 @@ export const AppProvider = ({ children }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedProjectId, setSelectedProjectId] = useState(null);
 
-  // Dynamic Content Data
-  const [projects, setProjects] = useState(() => {
-    const saved = localStorage.getItem('epm_projects');
-    return saved ? JSON.parse(saved) : DEMO_PROJECTS;
-  });
-
-  const [tasks, setTasks] = useState(() => {
-    const saved = localStorage.getItem('epm_tasks');
-    return saved ? JSON.parse(saved) : DEMO_TASKS;
-  });
-
-  const [applications, setApplications] = useState(() => {
-    const saved = localStorage.getItem('epm_apps');
-    return saved ? JSON.parse(saved) : DEMO_APPLICATIONS;
-  });
-
-  const [releases, setReleases] = useState(() => {
-    const saved = localStorage.getItem('epm_releases');
-    return saved ? JSON.parse(saved) : DEMO_RELEASES;
-  });
-
-  const [issues, setIssues] = useState(() => {
-    const saved = localStorage.getItem('epm_issues');
-    return saved ? JSON.parse(saved) : DEMO_ISSUES;
-  });
-
+  // Dynamic Content Data (with persistence)
   const [users, setUsers] = useState(() => {
     const saved = localStorage.getItem('epm_users');
     return saved ? JSON.parse(saved) : DEMO_USERS;
   });
 
-  useEffect(() => {
-    localStorage.setItem('epm_users', JSON.stringify(users));
-  }, [users]);
+  const [projects, setProjects] = useState(() => {
+    const saved = localStorage.getItem('epm_projects');
+    return saved ? JSON.parse(saved) : []; // Clean empty by default or start fresh
+  });
+
+  const [tasks, setTasks] = useState(() => {
+    const saved = localStorage.getItem('epm_tasks');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [applications, setApplications] = useState(() => {
+    const saved = localStorage.getItem('epm_apps');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [releases, setReleases] = useState(() => {
+    const saved = localStorage.getItem('epm_releases');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [issues, setIssues] = useState(() => {
+    const saved = localStorage.getItem('epm_issues');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [activities, setActivities] = useState(DEMO_ACTIVITIES);
   const [notifications, setNotifications] = useState(DEMO_NOTIFICATIONS);
   const [toasts, setToasts] = useState([]);
 
-  // Sync Theme to HTML class
+  // Theme sync
   useEffect(() => {
     const root = document.documentElement;
     if (theme === 'light') {
@@ -80,14 +77,14 @@ export const AppProvider = ({ children }) => {
     localStorage.setItem('epm_theme', theme);
   }, [theme]);
 
-  // Persist core arrays
+  // Persist arrays
+  useEffect(() => {
+    localStorage.setItem('epm_users', JSON.stringify(users));
+  }, [users]);
+
   useEffect(() => {
     localStorage.setItem('epm_projects', JSON.stringify(projects));
   }, [projects]);
-
-  useEffect(() => {
-    localStorage.setItem('epm_tasks', JSON.stringify(tasks));
-  }, [tasks]);
 
   useEffect(() => {
     localStorage.setItem('epm_releases', JSON.stringify(releases));
@@ -97,7 +94,11 @@ export const AppProvider = ({ children }) => {
     localStorage.setItem('epm_issues', JSON.stringify(issues));
   }, [issues]);
 
-  // Global Keyboard Shortcuts (Ctrl + K for search)
+  useEffect(() => {
+    localStorage.setItem('epm_apps', JSON.stringify(applications));
+  }, [applications]);
+
+  // Global Keyboard Shortcuts (Ctrl + K)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -122,17 +123,20 @@ export const AppProvider = ({ children }) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
-  // Auth Operations
+  // Auth Operations - Supports dynamic users created with custom passwords!
   const login = (username, password) => {
-    const foundUser = DEMO_USERS.find(
-      (u) => u.username.toLowerCase() === username.trim().toLowerCase() && u.passwordHash === password
+    const cleanUsername = username.trim().toLowerCase();
+    
+    // Search across ALL users (including newly created ones)
+    const foundUser = users.find(
+      (u) => u.username?.toLowerCase() === cleanUsername || u.email?.toLowerCase() === cleanUsername
     );
 
-    if (foundUser) {
+    if (foundUser && (foundUser.passwordHash === password || foundUser.password === password)) {
       setCurrentUser(foundUser);
       localStorage.setItem('epm_user', JSON.stringify(foundUser));
-      addToast('success', 'Welcome Back!', `Logged in as ${foundUser.name} (${foundUser.role})`);
-      logActivity(foundUser.name, `User authenticated successfully (${foundUser.role})`, 'Security Audit');
+      addToast('success', 'Welcome Back!', `Signed in as ${foundUser.name} (${foundUser.role})`);
+      logActivity(foundUser.name, `User signed in successfully (${foundUser.role})`, 'Security Audit');
       return { success: true, roleKey: foundUser.roleKey };
     } else {
       addToast('error', 'Authentication Failed', 'Invalid username or password credentials.');
@@ -142,11 +146,11 @@ export const AppProvider = ({ children }) => {
 
   const logout = () => {
     if (currentUser) {
-      logActivity(currentUser.name, 'User logged out of session', 'Security Audit');
+      logActivity(currentUser.name, 'User signed out', 'Security Audit');
     }
     setCurrentUser(null);
     localStorage.removeItem('epm_user');
-    addToast('info', 'Logged Out', 'You have been safely signed out.');
+    addToast('info', 'Signed Out', 'You have been signed out.');
   };
 
   const toggleTheme = () => {
@@ -178,8 +182,8 @@ export const AppProvider = ({ children }) => {
       ...projectData
     };
     setProjects((prev) => [newProj, ...prev]);
-    addToast('success', 'Project Created', `Project "${newProj.name}" has been registered.`);
-    logActivity(currentUser?.name, `Created new project "${newProj.name}"`, 'Project Workspace');
+    addToast('success', 'Project Created', `Project "${newProj.name}" created.`);
+    logActivity(currentUser?.name, `Created project "${newProj.name}"`, 'Projects');
   };
 
   const updateProjectStatus = (id, newStatus, newProgress) => {
@@ -193,31 +197,7 @@ export const AppProvider = ({ children }) => {
         return p;
       })
     );
-    addToast('info', 'Project Updated', `Project status changed to ${newStatus}`);
-  };
-
-  const addTask = (taskData) => {
-    const newTask = {
-      id: `tsk-${Date.now()}`,
-      commentsCount: 0,
-      actualHours: 0,
-      ...taskData
-    };
-    setTasks((prev) => [newTask, ...prev]);
-    addToast('success', 'Task Created', `Task "${newTask.taskName}" assigned.`);
-    logActivity(currentUser?.name, `Created task "${newTask.taskName}"`, 'Task Manager');
-  };
-
-  const updateTaskStatus = (taskId, newStatus) => {
-    setTasks((prev) =>
-      prev.map((t) => {
-        if (t.id === taskId) {
-          return { ...t, status: newStatus };
-        }
-        return t;
-      })
-    );
-    addToast('success', 'Task Moved', `Task status updated to ${newStatus}`);
+    addToast('info', 'Status Changed', `Project updated to ${newStatus}`);
   };
 
   const addRelease = (releaseData) => {
@@ -229,20 +209,8 @@ export const AppProvider = ({ children }) => {
       ...releaseData
     };
     setReleases((prev) => [newRel, ...prev]);
-    addToast('success', 'Release Published', `Release ${newRel.version} (${newRel.appName}) is live!`);
+    addToast('success', 'Release Published', `Release ${newRel.version} live!`);
     logActivity(currentUser?.name, `Published release ${newRel.version} for ${newRel.appName}`, 'Release Manager');
-
-    // Add push notification
-    const newNotif = {
-      id: `notif-${Date.now()}`,
-      title: 'New Release Published',
-      message: `${currentUser?.name} uploaded release ${newRel.version} for ${newRel.appName}.`,
-      timestamp: 'Just now',
-      read: false,
-      type: 'release',
-      link: 'releases'
-    };
-    setNotifications((prev) => [newNotif, ...prev]);
   };
 
   const addIssue = (issueData) => {
@@ -263,12 +231,15 @@ export const AppProvider = ({ children }) => {
     setIssues((prev) =>
       prev.map((i) => (i.id === issueId ? { ...i, status: newStatus } : i))
     );
-    addToast('info', 'Issue Ticket Updated', `Ticket ${issueId} marked as ${newStatus}`);
+    addToast('info', 'Issue Updated', `Ticket ${issueId} marked as ${newStatus}`);
   };
 
+  // Add Employee with Password!
   const addUser = (userData) => {
     const newUser = {
       id: `usr-${Date.now()}`,
+      username: userData.username || userData.email.split('@')[0],
+      passwordHash: userData.password || userData.passwordHash || 'Emp@123',
       activeProjectsCount: parseInt(userData.activeProjectsCount || 0),
       pendingTasksCount: 0,
       completedTasksCount: 0,
@@ -277,48 +248,60 @@ export const AppProvider = ({ children }) => {
       ...userData
     };
     setUsers((prev) => [newUser, ...prev]);
-    addToast('success', 'Team Member Added', `${newUser.name} has been added to ${newUser.department}.`);
-    logActivity(currentUser?.name, `Added team member "${newUser.name}" (${newUser.role})`, 'Team Directory');
+    addToast('success', 'Employee Created', `${newUser.name} created! Username: "${newUser.username}", Password: "${newUser.passwordHash}".`);
+    logActivity(currentUser?.name, `Created employee account "${newUser.name}" (${newUser.username})`, 'Team Directory');
   };
 
   const updateUser = (userId, updatedData) => {
     setUsers((prev) =>
       prev.map((u) => (u.id === userId ? { ...u, ...updatedData } : u))
     );
-    addToast('info', 'Profile Updated', 'Team member details have been updated.');
-    logActivity(currentUser?.name, `Updated team member profile`, 'Team Directory');
+    addToast('info', 'Profile Updated', 'Employee details updated.');
+    logActivity(currentUser?.name, `Updated employee profile`, 'Team Directory');
   };
 
   const deleteUser = (userId) => {
     const targetUser = users.find((u) => u.id === userId);
     setUsers((prev) => prev.filter((u) => u.id !== userId));
-    addToast('warning', 'Member Removed', `Employee "${targetUser?.name || 'User'}" has been deleted.`);
-    logActivity(currentUser?.name, `Deleted team member "${targetUser?.name}"`, 'Team Directory');
+    addToast('warning', 'Employee Removed', `Employee "${targetUser?.name || 'User'}" deleted.`);
+    logActivity(currentUser?.name, `Deleted employee "${targetUser?.name}"`, 'Team Directory');
+  };
+
+  // Reset / Clear Data Function
+  const clearAllData = () => {
+    setProjects([]);
+    setReleases([]);
+    setIssues([]);
+    setApplications([]);
+    localStorage.removeItem('epm_projects');
+    localStorage.removeItem('epm_releases');
+    localStorage.removeItem('epm_issues');
+    localStorage.removeItem('epm_apps');
+    addToast('info', 'Data Reset', 'All projects, releases, apps, and issue tables cleared for clean setup.');
+  };
+
+  const loadDemoData = () => {
+    setProjects(DEMO_PROJECTS);
+    setReleases(DEMO_RELEASES);
+    setIssues(DEMO_ISSUES);
+    setApplications(DEMO_APPLICATIONS);
+    setUsers(DEMO_USERS);
+    addToast('success', 'Demo Data Loaded', 'Sample projects, apps, and releases loaded.');
   };
 
   const markAllNotificationsRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    addToast('info', 'Notifications Updated', 'All notifications marked as read.');
   };
 
-  // Navigation Helper
   const navigateTo = (tabKey, projId = null) => {
     setActiveTab(tabKey);
     if (projId) setSelectedProjectId(projId);
     setMobileMenuOpen(false);
   };
 
-  // Filtered views by active company
   const filteredProjects = activeCompanyId === 'all' 
     ? projects 
     : projects.filter((p) => p.companyId === activeCompanyId);
-
-  const filteredTasks = activeCompanyId === 'all'
-    ? tasks
-    : tasks.filter((t) => {
-        const proj = projects.find((p) => p.id === t.projectId);
-        return proj && proj.companyId === activeCompanyId;
-      });
 
   const filteredApplications = activeCompanyId === 'all'
     ? applications
@@ -337,8 +320,6 @@ export const AppProvider = ({ children }) => {
         companies: DEMO_COMPANIES,
         projects: filteredProjects,
         allProjects: projects,
-        tasks: filteredTasks,
-        allTasks: tasks,
         applications: filteredApplications,
         allApplications: applications,
         releases,
@@ -361,14 +342,14 @@ export const AppProvider = ({ children }) => {
         setSelectedProjectId,
         addProject,
         updateProjectStatus,
-        addTask,
-        updateTaskStatus,
         addRelease,
         addIssue,
         updateIssueStatus,
         addUser,
         updateUser,
         deleteUser,
+        clearAllData,
+        loadDemoData,
         markAllNotificationsRead,
         logActivity
       }}
