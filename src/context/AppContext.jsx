@@ -175,6 +175,22 @@ export const AppProvider = ({ children }) => {
 
   // Data Mutations (Create, Update, Delete)
 
+  // 0. Companies
+  const addCompany = (companyData) => {
+    const newComp = {
+      id: `comp-${Date.now()}`,
+      logo: companyData.logo || '🏢',
+      departments: companyData.departments || ['Engineering', 'Operations'],
+      projectsCount: 0,
+      activeApps: 0,
+      teamSize: 1,
+      ...companyData
+    };
+    setCompanies((prev) => [...prev, newComp]);
+    addToast('success', 'Company Registered', `Subsidiary "${newComp.name}" (${newComp.code}) added to Group of Companies.`);
+    logActivity(currentUser?.name, `Created subsidiary company "${newComp.name}"`, 'Group Companies');
+  };
+
   // 1. Projects
   const addProject = (projectData) => {
     const newProj = {
@@ -418,6 +434,8 @@ export const AppProvider = ({ children }) => {
         addProject,
         updateProjectStatus,
         deleteProject,
+        addCompany,
+        deleteCompany,
         deleteApplication,
         addRelease,
         deleteRelease,

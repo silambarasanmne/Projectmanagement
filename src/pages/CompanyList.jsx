@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { CreateCompanyModal } from '../components/Modals/CreateCompanyModal';
 import { Building, Layers, FolderKanban, Users, Plus, ChevronRight, Shield, ArrowRight, Trash2 } from 'lucide-react';
 
 export const CompanyList = () => {
   const { companies, projects, applications, users, navigateTo, setActiveCompanyId, deleteCompany } = useApp();
   const [selectedCompId, setSelectedCompId] = useState('comp-1');
+  const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
 
   const filteredCompanies = companies.filter(c => c.id !== 'all');
   const activeCompanyObj = companies.find(c => c.id === selectedCompId) || filteredCompanies[0];
@@ -40,7 +42,7 @@ export const CompanyList = () => {
         </div>
 
         <button
-          onClick={() => alert("Company Creation Modal: Available for Super Admin.")}
+          onClick={() => setIsCompanyModalOpen(true)}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold text-xs shadow-lg shadow-indigo-600/30 hover:from-indigo-500 hover:to-violet-500 transition-all shrink-0"
         >
           <Plus className="w-4 h-4" />
@@ -218,6 +220,12 @@ export const CompanyList = () => {
 
         </div>
       )}
+
+      {/* Modal to Create Company Subsidiary */}
+      <CreateCompanyModal
+        isOpen={isCompanyModalOpen}
+        onClose={() => setIsCompanyModalOpen(false)}
+      />
 
     </div>
   );
