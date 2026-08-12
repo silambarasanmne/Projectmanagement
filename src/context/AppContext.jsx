@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { api } from '../services/api';
 import { 
   DEMO_USERS, 
   DEMO_COMPANIES, 
@@ -66,6 +67,34 @@ export const AppProvider = ({ children }) => {
 
   // Inactivity Auto-Logout Timer Ref
   const idleTimerRef = useRef(null);
+
+  // Initial MySQL Database Sync Effect
+  useEffect(() => {
+    const syncFromDatabase = async () => {
+      try {
+        const [compRes, projRes, userRes, appRes, relRes, issRes, actRes] = await Promise.allSettled([
+          api.getCompanies(),
+          api.getProjects(),
+          api.getUsers(),
+          api.getApplications(),
+          api.getReleases(),
+          api.getIssues(),
+          api.getActivities()
+        ]);
+
+        if (compRes.status === 'fulfilled' && compRes.value?.data?.length > 0) setCompanies(compRes.value.data);
+        if (projRes.status === 'fulfilled' && projRes.value?.data?.length > 0) setProjects(projRes.value.data);
+        if (userRes.status === 'fulfilled' && userRes.value?.data?.length > 0) setUsers(userRes.value.data);
+        if (appRes.status === 'fulfilled' && appRes.value?.data?.length > 0) setApplications(appRes.value.data);
+        if (relRes.status === 'fulfilled' && relRes.value?.data?.length > 0) setReleases(relRes.value.data);
+        if (issRes.status === 'fulfilled' && issRes.value?.data?.length > 0) setIssues(issRes.value.data);
+        if (actRes.status === 'fulfilled' && actRes.value?.data?.length > 0) setActivities(actRes.value.data);
+      } catch (err) {
+        console.warn('Backend database sync unavailable, using local cache:', err);
+      }
+    };
+    syncFromDatabase();
+  }, []);
 
   // Theme sync
   useEffect(() => {
