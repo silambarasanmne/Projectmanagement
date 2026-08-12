@@ -11,12 +11,18 @@ export const MoveToTestingModal = ({ isOpen, onClose, project }) => {
   if (!isOpen || !project) return null;
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const selectedUserObj = users.find(u => u.id === assignedTester || u.name === assignedTester);
     const testerName = selectedUserObj?.name || assignedTester || 'QA Lead';
     const testerId = selectedUserObj?.id || '';
 
-    const urlToTest = testingUrl.trim() || `https://staging.${project.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.apexgroup.com`;
+    let urlToTest = (testingUrl || '').trim();
+    if (urlToTest && !urlToTest.startsWith('http://') && !urlToTest.startsWith('https://')) {
+      urlToTest = `https://${urlToTest}`;
+    }
+    if (!urlToTest) {
+      urlToTest = `https://staging.${project.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.apexgroup.com`;
+    }
 
     updateProjectStatus(project.id, 'Testing Assigned', {
       assignedTesterId: testerId,
@@ -72,7 +78,12 @@ export const MoveToTestingModal = ({ isOpen, onClose, project }) => {
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs overflow-y-auto flex-1">
+        <form 
+          onSubmit={handleSubmit} 
+          action="javascript:void(0);" 
+          method="post"
+          className="p-6 space-y-4 text-xs overflow-y-auto flex-1"
+        >
           
           <div className="p-3.5 rounded-2xl bg-amber-950/30 border border-amber-500/20 text-xs">
             <p className="font-semibold text-amber-300">Project: {project.name}</p>
@@ -104,11 +115,11 @@ export const MoveToTestingModal = ({ isOpen, onClose, project }) => {
             <div className="relative">
               <Globe className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
               <input
-                type="url"
+                type="text"
                 required
                 value={testingUrl}
                 onChange={(e) => setTestingUrl(e.target.value)}
-                placeholder="https://staging.apexgroup.com or http://localhost:5173"
+                placeholder="https://staging.apexgroup.com or staging.apexgroup.com"
                 className="w-full glass-input pl-10 pr-4 py-2.5 rounded-xl text-amber-300 font-semibold text-xs"
               />
             </div>

@@ -12,9 +12,15 @@ export const MoveToReleaseModal = ({ isOpen, onClose, project }) => {
   if (!isOpen || !project) return null;
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
 
-    const urlToSave = releaseUrl.trim() || `https://app.${project.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
+    let urlToSave = (releaseUrl || '').trim();
+    if (urlToSave && !urlToSave.startsWith('http://') && !urlToSave.startsWith('https://')) {
+      urlToSave = `https://${urlToSave}`;
+    }
+    if (!urlToSave) {
+      urlToSave = `https://app.${project.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
+    }
 
     // 1. Update Project Status to Released and 100% progress
     updateProjectStatus(project.id, 'Released', { releaseUrl: urlToSave, version: version }, 100);
@@ -92,7 +98,12 @@ export const MoveToReleaseModal = ({ isOpen, onClose, project }) => {
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs overflow-y-auto flex-1">
+        <form 
+          onSubmit={handleSubmit} 
+          action="javascript:void(0);" 
+          method="post"
+          className="p-6 space-y-4 text-xs overflow-y-auto flex-1"
+        >
           
           <div className="p-3.5 rounded-2xl bg-emerald-950/30 border border-emerald-500/20 text-xs">
             <p className="font-semibold text-emerald-300">Project: {project.name}</p>
@@ -104,11 +115,11 @@ export const MoveToReleaseModal = ({ isOpen, onClose, project }) => {
             <div className="relative">
               <Globe className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
               <input
-                type="url"
+                type="text"
                 required
                 value={releaseUrl}
                 onChange={(e) => setReleaseUrl(e.target.value)}
-                placeholder="https://app.apexgroup.com or https://play.google.com/..."
+                placeholder="https://app.apexgroup.com or app.apexgroup.com"
                 className="w-full glass-input pl-10 pr-4 py-2.5 rounded-xl text-indigo-300 font-semibold text-xs"
               />
             </div>

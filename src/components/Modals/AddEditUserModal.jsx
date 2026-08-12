@@ -113,7 +113,12 @@ export const AddEditUserModal = ({ isOpen, onClose, userToEdit = null }) => {
         </div>
 
         {/* Form Container with flex-1 and scrollable body */}
-        <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <form 
+          onSubmit={handleSubmit} 
+          action="javascript:void(0);" 
+          method="post"
+          className="flex-1 flex flex-col min-h-0 overflow-hidden"
+        >
           
           {/* Scrollable Fields Body */}
           <div className="p-6 space-y-4 text-xs overflow-y-auto flex-1">

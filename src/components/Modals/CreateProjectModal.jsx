@@ -69,7 +69,12 @@ export const CreateProjectModal = ({ isOpen, onClose }) => {
         </div>
 
         {/* Form */}
-        <form onSubmit={(e) => handleSubmit(e, formData.status)} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto text-xs">
+        <form 
+          onSubmit={(e) => handleSubmit(e, formData.status)} 
+          action="javascript:void(0);" 
+          method="post"
+          className="p-6 space-y-4 max-h-[75vh] overflow-y-auto text-xs"
+        >
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
