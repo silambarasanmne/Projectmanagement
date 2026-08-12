@@ -139,18 +139,22 @@ export const AppProvider = ({ children }) => {
 
   // Auth Operations
   const login = (username, password) => {
-    const cleanUsername = username.trim().toLowerCase();
-    const foundUser = users.find(
+    const cleanUsername = (username || '').trim().toLowerCase();
+    const cleanPassword = (password || '').trim();
+    
+    const activeUsers = (users && users.length > 0) ? users : DEMO_USERS;
+
+    const foundUser = activeUsers.find(
       (u) => u.username?.toLowerCase() === cleanUsername || u.email?.toLowerCase() === cleanUsername
     );
 
-    if (foundUser && (foundUser.passwordHash === password || foundUser.password === password)) {
+    if (foundUser && (foundUser.passwordHash === cleanPassword || foundUser.password === cleanPassword)) {
       setCurrentUser(foundUser);
       addToast('success', 'Welcome Back!', `Signed in as ${foundUser.name} (${foundUser.role})`);
       logActivity(foundUser.name, `User signed in (${foundUser.role})`, 'Security Audit');
       return { success: true, roleKey: foundUser.roleKey };
     } else {
-      addToast('error', 'Authentication Failed', 'Invalid username or password credentials.');
+      addToast('error', 'Authentication Failed', 'Invalid username or password. Try Admin: "admin" / "Admin@123".');
       return { success: false, error: 'Invalid username or password' };
     }
   };
