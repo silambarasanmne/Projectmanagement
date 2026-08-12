@@ -143,48 +143,23 @@ export const LoginPage = () => {
         </form>
 
         {/* Mobile 1-Tap Quick Login Box */}
-        <div className="pt-3 border-t border-slate-800/80 space-y-2.5">
+        <div className="pt-3 border-t border-slate-800/80 space-y-3">
           <div className="flex items-center justify-between text-[11px]">
             <span className="text-slate-400 font-semibold flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>Mobile 1-Tap Instant Sign In</span>
+              <span>Mobile 1-Tap Instant Access</span>
             </span>
-            <span className="text-slate-500 text-[10px]">Select Role</span>
+            <span className="text-slate-500 font-mono text-[10px]">admin / Admin@123</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickDemoLogin('admin', 'Admin@123')}
-              className="py-2.5 px-3 rounded-xl bg-indigo-600/25 hover:bg-indigo-600 text-indigo-200 border border-indigo-500/40 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-[0.98]"
-            >
-              <span>⚡ Super Admin</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickDemoLogin('manager', 'Manager@123')}
-              className="py-2.5 px-3 rounded-xl bg-violet-600/25 hover:bg-violet-600 text-violet-200 border border-violet-500/40 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-[0.98]"
-            >
-              <span>💼 Project Manager</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickDemoLogin('tester', 'Tester@123')}
-              className="py-2.5 px-3 rounded-xl bg-amber-600/25 hover:bg-amber-600 text-amber-200 border border-amber-500/40 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-[0.98]"
-            >
-              <span>🧪 QA Tester</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickDemoLogin('developer', 'Developer@123')}
-              className="py-2.5 px-3 rounded-xl bg-emerald-600/25 hover:bg-emerald-600 text-emerald-200 border border-emerald-500/40 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-[0.98]"
-            >
-              <span>💻 Developer</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => handleQuickDemoLogin('admin', 'Admin@123')}
+            className="w-full py-3 px-3 rounded-xl bg-gradient-to-r from-indigo-600/30 to-violet-600/30 hover:from-indigo-600 hover:to-violet-600 text-white border border-indigo-500/40 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md active:scale-[0.98]"
+          >
+            <User className="w-3.5 h-3.5 text-indigo-300" />
+            <span>⚡ 1-Tap Mobile Sign In (Super Admin)</span>
+          </button>
         </div>
 
       </div>
