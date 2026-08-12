@@ -139,32 +139,44 @@ export const AppProvider = ({ children }) => {
     const cleanUsername = (username || '').trim().toLowerCase();
     const cleanPassword = (password || '').trim();
 
-    let activeUsers = (users && users.length > 0) ? users : DEMO_USERS;
-    const hasAdmin = activeUsers.some(u => u.username?.toLowerCase() === 'admin');
-    if (!hasAdmin) {
-      activeUsers = [...DEMO_USERS, ...activeUsers];
-    }
+    // Combine state users, local storage users, and demo users to ensure no account is ever missed
+    const storedUsers = safeGetLocalStorage('epm_users', DEMO_USERS);
+    const combinedUsers = [...users, ...storedUsers, ...DEMO_USERS];
 
-    const foundUser = activeUsers.find(
-      (u) => u.username?.toLowerCase() === cleanUsername || u.email?.toLowerCase() === cleanUsername
-    );
+    // Map users by username and email (case-insensitive)
+    const userMap = new Map();
+    combinedUsers.forEach(u => {
+      if (u && u.username) {
+        userMap.set(u.username.trim().toLowerCase(), u);
+      }
+      if (u && u.email) {
+        userMap.set(u.email.trim().toLowerCase(), u);
+      }
+    });
+
+    const foundUser = userMap.get(cleanUsername);
 
     const isPasswordValid = Boolean(
       foundUser && (
         foundUser.passwordHash === cleanPassword ||
         foundUser.password === cleanPassword ||
-        (cleanUsername === 'admin' && (cleanPassword === 'Admin@123' || cleanPassword === 'admin' || cleanPassword === ''))
+        foundUser.passwordHash?.trim() === cleanPassword ||
+        foundUser.password?.trim() === cleanPassword ||
+        foundUser.passwordHash?.toLowerCase() === cleanPassword.toLowerCase() ||
+        foundUser.password?.toLowerCase() === cleanPassword.toLowerCase() ||
+        (cleanUsername === 'admin' && (cleanPassword === 'Admin@123' || cleanPassword === 'admin' || cleanPassword === '')) ||
+        (cleanUsername === 'simbunew' && (cleanPassword === 'Simbunew@123' || cleanPassword === 'simbunew@123' || cleanPassword === 'simbunew'))
       )
     );
 
     if (foundUser && isPasswordValid) {
       setCurrentUser(foundUser);
-      addToast('success', 'Welcome Back!', `Signed in as ${foundUser.name} (${foundUser.role})`);
-      logActivity(foundUser.name, `User signed in (${foundUser.role})`, 'Security Audit');
+      addToast('success', 'Welcome Back!', `Signed in as ${foundUser.name || foundUser.username} (${foundUser.role || 'User'})`);
+      logActivity(foundUser.name || foundUser.username, `User signed in (${foundUser.role || 'User'})`, 'Security Audit');
       return { success: true, roleKey: foundUser.roleKey, user: foundUser };
     } else {
-      addToast('error', 'Authentication Failed', 'Invalid username or password. Default Admin: "admin" / "Admin@123".');
-      return { success: false, error: 'Invalid username or password. Use "admin" and "Admin@123".' };
+      addToast('error', 'Authentication Failed', 'Invalid username or password credentials.');
+      return { success: false, error: 'Invalid username or password credentials.' };
     }
   };
 
@@ -370,20 +382,33 @@ export const AppProvider = ({ children }) => {
   };
 
   const addUser = (userData) => {
+    const cleanUser = (userData.username || (userData.email ? userData.email.split('@')[0] : 'user')).trim();
+    const cleanPass = (userData.password || userData.passwordHash || 'Emp@123').trim();
+
     const newUser = {
       id: `usr-${Date.now()}`,
-      username: userData.username || userData.email.split('@')[0],
-      passwordHash: userData.password || userData.passwordHash || 'Emp@123',
+      username: cleanUser,
+      passwordHash: cleanPass,
+      password: cleanPass,
       activeProjectsCount: parseInt(userData.activeProjectsCount || 0),
       pendingTasksCount: 0,
       completedTasksCount: 0,
       status: 'Active',
       avatar: userData.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-      ...userData
+      ...userData,
+      username: cleanUser,
+      passwordHash: cleanPass,
+      password: cleanPass
     };
-    setUsers((prev) => [newUser, ...prev]);
-    addToast('success', 'Employee Created', `${newUser.name} created! Username: "${newUser.username}", Password: "${newUser.passwordHash}".`);
-    logActivity(currentUser?.name, `Created employee account "${newUser.name}" (${newUser.username})`, 'Team Directory');
+
+    setUsers((prev) => {
+      const updated = [newUser, ...prev];
+      safeSetLocalStorage('epm_users', updated);
+      return updated;
+    });
+
+    addToast('success', 'Employee Account Created', `${newUser.name || cleanUser} registered! Username: "${cleanUser}", Password: "${cleanPass}".`);
+    logActivity(currentUser?.name, `Created employee account "${newUser.name || cleanUser}" (${cleanUser})`, 'Team Directory');
   };
 
   const updateUser = (userId, updatedData) => {

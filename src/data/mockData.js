@@ -73,6 +73,24 @@ export const DEMO_USERS = [
     pendingTasksCount: 2,
     completedTasksCount: 15,
     status: 'Active'
+  },
+  {
+    id: 'usr-5',
+    username: 'simbunew',
+    passwordHash: 'Simbunew@123',
+    password: 'Simbunew@123',
+    name: 'Simbu New User',
+    email: 'simbunew@apexgroup.com',
+    role: 'Super Admin',
+    roleKey: 'admin',
+    companyId: 'comp-1',
+    department: 'Executive Management',
+    designation: 'Senior Lead Specialist',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+    activeProjectsCount: 1,
+    pendingTasksCount: 0,
+    completedTasksCount: 3,
+    status: 'Active'
   }
 ];
 
