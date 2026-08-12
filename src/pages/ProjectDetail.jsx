@@ -34,7 +34,10 @@ export const ProjectDetail = () => {
     activities, 
     navigateTo, 
     updateProjectStatus, 
+    addNotification,
     addToast,
+    logActivity,
+    currentUser,
     users 
   } = useApp();
 
@@ -60,11 +63,20 @@ export const ProjectDetail = () => {
   const companyName = companyObj ? companyObj.name : project.companyName || 'Group Subsidiary';
   const responsibleEmp = users.find(u => u.name === project.manager || u.id === project.managerId);
 
+  // Check if current user is the assigned tester for this project
+  const isAssignedTester = Boolean(
+    currentUser && (
+      currentUser.id === project.assignedTesterId ||
+      currentUser.name?.toLowerCase() === project.assignedTesterName?.toLowerCase()
+    )
+  );
+
   // Phase-aware status colors
   const getPhaseStyle = (phase) => {
     switch (phase) {
       case 'In Process': return { bg: 'bg-indigo-500/15', text: 'text-indigo-400', border: 'border-indigo-500/30', icon: Clock };
       case 'Testing': return { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30', icon: TestTube };
+      case 'Testing Completed': return { bg: 'bg-teal-500/15', text: 'text-teal-300', border: 'border-teal-500/30', icon: CheckCircle2 };
       case 'Release': 
       case 'Completed': return { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30', icon: CheckCircle2 };
       default: return { bg: 'bg-slate-800', text: 'text-slate-300', border: 'border-slate-700', icon: Clock };
@@ -74,13 +86,34 @@ export const ProjectDetail = () => {
   const phaseStyle = getPhaseStyle(project.status);
   const PhaseIcon = phaseStyle.icon;
 
-  // Lifecycle Pipeline Steps
+  // Lifecycle Pipeline Steps (4-stage workflow)
   const pipelineSteps = [
     { key: 'In Process', label: 'In Process', icon: Play, color: 'indigo' },
     { key: 'Testing', label: 'Testing', icon: TestTube, color: 'amber' },
+    { key: 'Testing Completed', label: 'Testing Completed', icon: CheckCircle2, color: 'teal' },
     { key: 'Release', label: 'Release', icon: Package, color: 'emerald' }
   ];
   const currentStepIndex = pipelineSteps.findIndex(s => s.key === project.status);
+
+  const handleMarkTestingCompleted = () => {
+    updateProjectStatus(project.id, 'Testing Completed', {
+      testedBy: currentUser?.name || 'Assigned Tester',
+      completedTestingAt: new Date().toISOString()
+    }, 85);
+
+    addNotification({
+      targetUserId: project.developerId || 'admin',
+      targetUserName: project.developerName || 'Developer',
+      fromUser: currentUser?.name || 'Assigned Tester',
+      title: 'Testing Completed',
+      message: `Testing completed for "${project.name}" — Application is ready for release.`,
+      type: 'testing_completed',
+      projectId: project.id
+    });
+
+    addToast('success', 'Testing Completed! 🎉', `Project "${project.name}" QA testing completed.`);
+    logActivity(currentUser?.name, `Marked testing completed for project "${project.name}"`, 'Projects');
+  };
 
   return (
     <div className="space-y-6 animate-fade-in pb-12">
@@ -115,16 +148,22 @@ export const ProjectDetail = () => {
             </div>
             <h1 className="font-heading text-2xl sm:text-3xl font-extrabold text-white mt-0.5">{project.name}</h1>
             <p className="text-xs sm:text-sm text-slate-300 mt-2 max-w-3xl leading-relaxed">{project.description}</p>
+            {project.assignedTesterName && (
+              <div className="mt-2 text-xs text-amber-300 font-medium flex items-center gap-2">
+                <UserCheck className="w-4 h-4 text-amber-400" />
+                <span>Assigned QA Tester: <strong className="text-white">{project.assignedTesterName}</strong></span>
+              </div>
+            )}
           </div>
 
-          {/* Phase-Aware Action Buttons: Show ONLY the NEXT valid action */}
+          {/* Phase-Aware Action Buttons: Sequential Workflow */}
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
             
-            {/* Show "Start in Process" only when NOT yet In Process */}
-            {project.status !== 'In Process' && project.status !== 'Testing' && project.status !== 'Release' && project.status !== 'Completed' && (
+            {/* 1. Show "Start in Process" only when pending */}
+            {project.status !== 'In Process' && project.status !== 'Testing' && project.status !== 'Testing Completed' && project.status !== 'Release' && project.status !== 'Completed' && (
               <button
                 onClick={() => {
-                  updateProjectStatus(project.id, 'In Process', 30);
+                  updateProjectStatus(project.id, 'In Process', {}, 30);
                   addToast('success', 'Status Updated', `"${project.name}" started In Process.`);
                 }}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
@@ -134,7 +173,7 @@ export const ProjectDetail = () => {
               </button>
             )}
 
-            {/* Show "Move to Testing" only when currently In Process */}
+            {/* 2. Show "Move to Testing" when In Process */}
             {project.status === 'In Process' && (
               <button
                 onClick={() => setTestingModalOpen(true)}
@@ -145,18 +184,39 @@ export const ProjectDetail = () => {
               </button>
             )}
 
-            {/* Show "Move to Release" only when currently in Testing */}
+            {/* 3. When in Testing phase: */}
             {project.status === 'Testing' && (
+              <>
+                {/* If user is the assigned tester or Super Admin / assigned testing user, show Testing Completed */}
+                {(isAssignedTester || currentUser?.roleKey === 'admin' || currentUser?.name === project.assignedTesterName) ? (
+                  <button
+                    onClick={handleMarkTestingCompleted}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold text-xs shadow-lg shadow-teal-600/30 transition-all cursor-pointer"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Testing Completed</span>
+                  </button>
+                ) : (
+                  <span className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/10 text-amber-300 border border-amber-500/30 text-xs font-semibold">
+                    <TestTube className="w-4 h-4 animate-pulse" />
+                    <span>QA Testing in Progress ({project.assignedTesterName || 'QA Team'})</span>
+                  </span>
+                )}
+              </>
+            )}
+
+            {/* 4. When Testing Completed: Developer/Admin sees Move to Release */}
+            {project.status === 'Testing Completed' && (
               <button
                 onClick={() => setReleaseModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
               >
                 <Package className="w-4 h-4" />
-                <span>Move to Release</span>
+                <span>Move to Release & Add URL</span>
               </button>
             )}
 
-            {/* Show completion badge when Released */}
+            {/* 5. Show completion badge when Released */}
             {(project.status === 'Release' || project.status === 'Completed') && (
               <span className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold">
                 <CheckCircle2 className="w-4 h-4" />

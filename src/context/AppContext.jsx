@@ -61,7 +61,10 @@ export const AppProvider = ({ children }) => {
   });
 
   const [activities, setActivities] = useState(DEMO_ACTIVITIES);
-  const [notifications, setNotifications] = useState(DEMO_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState(() => {
+    const saved = localStorage.getItem('epm_notifications');
+    return saved ? JSON.parse(saved) : DEMO_NOTIFICATIONS;
+  });
   const [toasts, setToasts] = useState([]);
 
   // Inactivity Auto-Logout Timer Ref
@@ -104,6 +107,10 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('epm_apps', JSON.stringify(applications));
   }, [applications]);
+
+  useEffect(() => {
+    localStorage.setItem('epm_notifications', JSON.stringify(notifications));
+  }, [notifications]);
 
   // Global Keyboard Shortcuts (Ctrl + K)
   useEffect(() => {
@@ -239,11 +246,22 @@ export const AppProvider = ({ children }) => {
     logActivity(currentUser?.name, `Created project "${newProj.name}"`, 'Projects');
   };
 
-  const updateProjectStatus = (id, newStatus, newProgress) => {
+  const addNotification = (notif) => {
+    const newNotif = {
+      id: `notif-${Date.now()}`,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      read: false,
+      ...notif
+    };
+    setNotifications((prev) => [newNotif, ...prev]);
+  };
+
+  const updateProjectStatus = (id, newStatus, extraData = {}, newProgress) => {
     // Auto-calculate progress based on phase if not explicitly provided
     const autoProgress = newProgress !== undefined ? newProgress : (
       newStatus === 'In Process' ? 30 :
       newStatus === 'Testing' ? 70 :
+      newStatus === 'Testing Completed' ? 85 :
       newStatus === 'Release' || newStatus === 'Completed' ? 100 : 0
     );
 
@@ -252,6 +270,7 @@ export const AppProvider = ({ children }) => {
         if (p.id === id) {
           return {
             ...p,
+            ...extraData,
             status: newStatus,
             progress: autoProgress,
             lastUpdated: new Date().toISOString().replace('T', ' ').substring(0, 16)
@@ -454,6 +473,7 @@ export const AppProvider = ({ children }) => {
         users,
         activities,
         notifications,
+        addNotification,
         toasts,
         addToast,
         removeToast,

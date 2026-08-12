@@ -4,7 +4,7 @@ import { X, Package, Globe, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export const MoveToReleaseModal = ({ isOpen, onClose, project }) => {
-  const { updateProjectStatus, addRelease, addToast, logActivity, currentUser } = useApp();
+  const { updateProjectStatus, addRelease, addApplication, applications, companies, addToast, logActivity, currentUser } = useApp();
   const [releaseUrl, setReleaseUrl] = useState('');
   const [version, setVersion] = useState('v1.0.0');
   const [releaseNotes, setReleaseNotes] = useState('Production build deployment verified. All QA test cases passed successfully.');
@@ -14,10 +14,10 @@ export const MoveToReleaseModal = ({ isOpen, onClose, project }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const urlToSave = releaseUrl.trim() || `https://app.${project.name.toLowerCase().replace(/[^a-z0-0]/g, '')}.com`;
+    const urlToSave = releaseUrl.trim() || `https://app.${project.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
 
     // 1. Update Project Status to Release and 100% progress
-    updateProjectStatus(project.id, 'Release', 100);
+    updateProjectStatus(project.id, 'Release', {}, 100);
 
     // 2. Automatically log Release in APK Release Hub with Production URL!
     addRelease({
@@ -25,11 +25,29 @@ export const MoveToReleaseModal = ({ isOpen, onClose, project }) => {
       companyId: project.companyId,
       version: version,
       buildNumber: Math.floor(100 + Math.random() * 900),
-      platform: 'Web & APK Build',
+      platform: project.platform || 'Web & APK Build',
       releaseNotes: `${releaseNotes}\n\nLive Release URL: ${urlToSave}`,
       productionUrl: urlToSave,
       status: 'Published'
     });
+
+    // 3. Automatically add to Application Catalog
+    const appExists = applications.some(a => a.name.toLowerCase() === project.name.toLowerCase());
+    if (!appExists) {
+      const compObj = companies.find(c => c.id === project.companyId);
+      addApplication({
+        name: project.name,
+        type: project.type || 'Web Application',
+        companyId: project.companyId,
+        companyName: compObj?.name || project.companyName || 'Apex Tech Solutions',
+        version: version,
+        platform: project.platform || 'Web & Mobile',
+        technology: project.techStack?.join(', ') || 'React, Node.js, Tailwind',
+        productionUrl: urlToSave,
+        developer: project.manager || currentUser?.name || 'Lead Dev',
+        status: 'Active'
+      });
+    }
 
     // 3. Trigger Celebratory Confetti Animation
     confetti({

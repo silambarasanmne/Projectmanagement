@@ -57,7 +57,13 @@ export const Navbar = ({ onOpenModal }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const userNotifications = notifications.filter(n => 
+    !n.targetUserId || 
+    n.targetUserId === currentUser?.id || 
+    n.targetUserName?.toLowerCase() === currentUser?.name?.toLowerCase() ||
+    currentUser?.roleKey === 'admin'
+  );
+  const unreadCount = userNotifications.filter(n => !n.read).length;
   const currentCompany = companies.find(c => c.id === activeCompanyId) || companies[0];
 
   return (
@@ -244,26 +250,37 @@ export const Navbar = ({ onOpenModal }) => {
                 </div>
 
                 <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-                  {notifications.map((n) => (
-                    <div
-                      key={n.id}
-                      onClick={() => {
-                        setNotificationsOpen(false);
-                        if (n.link) navigateTo(n.link);
-                      }}
-                      className={`p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
-                        n.read
-                          ? 'bg-slate-900/40 border-slate-800/60 text-slate-400'
-                          : 'bg-indigo-950/20 border-indigo-500/20 text-slate-200 font-medium'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-semibold text-white">{n.title}</span>
-                        <span className="text-[10px] text-slate-400">{n.timestamp}</span>
+                  {userNotifications.length === 0 ? (
+                    <p className="text-xs text-slate-500 text-center py-4">No notifications</p>
+                  ) : (
+                    userNotifications.map((n) => (
+                      <div
+                        key={n.id}
+                        onClick={() => {
+                          setNotificationsOpen(false);
+                          if (n.projectId) {
+                            navigateTo('project-detail', n.projectId);
+                          } else if (n.link) {
+                            navigateTo(n.link);
+                          }
+                        }}
+                        className={`p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
+                          n.read
+                            ? 'bg-slate-900/40 border-slate-800/60 text-slate-400'
+                            : 'bg-indigo-950/20 border-indigo-500/20 text-slate-200 font-medium'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-semibold text-white">{n.title}</span>
+                          <span className="text-[10px] text-slate-400">{n.time || n.timestamp || 'Just now'}</span>
+                        </div>
+                        <p className="text-slate-300 text-[11px] leading-relaxed">{n.message}</p>
+                        {n.fromUser && (
+                          <p className="text-[10px] text-indigo-400 mt-1 font-semibold">From: {n.fromUser}</p>
+                        )}
                       </div>
-                      <p className="text-slate-300 text-[11px] leading-relaxed">{n.message}</p>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
             )}

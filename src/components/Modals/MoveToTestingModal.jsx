@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { X, TestTube, Sparkles, UserCheck } from 'lucide-react';
 
 export const MoveToTestingModal = ({ isOpen, onClose, project }) => {
-  const { users, updateProjectStatus, addToast, logActivity, currentUser } = useApp();
+  const { users, updateProjectStatus, addNotification, addToast, logActivity, currentUser } = useApp();
   const [assignedTester, setAssignedTester] = useState('');
   const [testingNotes, setTestingNotes] = useState('Development process completed. Ready for QA testing & security verification.');
 
@@ -11,9 +11,27 @@ export const MoveToTestingModal = ({ isOpen, onClose, project }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const testerName = assignedTester || 'QA Lead';
+    const selectedUserObj = users.find(u => u.id === assignedTester || u.name === assignedTester);
+    const testerName = selectedUserObj?.name || assignedTester || 'QA Lead';
+    const testerId = selectedUserObj?.id || '';
 
-    updateProjectStatus(project.id, 'Testing');
+    updateProjectStatus(project.id, 'Testing', {
+      assignedTesterId: testerId,
+      assignedTesterName: testerName,
+      testingNotes: testingNotes,
+      developerId: currentUser?.id,
+      developerName: currentUser?.name || 'Developer'
+    });
+
+    addNotification({
+      targetUserId: testerId,
+      targetUserName: testerName,
+      fromUser: currentUser?.name || 'Developer',
+      title: 'Testing Assigned',
+      message: `You have been assigned to test "${project.name}". Please conduct QA and mark Testing Completed.`,
+      type: 'testing_assigned',
+      projectId: project.id
+    });
 
     addToast(
       'info', 
@@ -69,7 +87,7 @@ export const MoveToTestingModal = ({ isOpen, onClose, project }) => {
               >
                 <option value="">Select Employee to Test Project...</option>
                 {users.map((u) => (
-                  <option key={u.id} value={u.name}>
+                  <option key={u.id} value={u.id}>
                     {u.name} — {u.designation} ({u.department})
                   </option>
                 ))}
