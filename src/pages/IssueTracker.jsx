@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Bug, Plus, Search, Filter, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
+import { Bug, Plus, Filter, Trash2 } from 'lucide-react';
 
 export const IssueTracker = ({ onOpenModal }) => {
-  const { issues, updateIssueStatus } = useApp();
+  const { issues, updateIssueStatus, deleteIssue } = useApp();
   const [severityFilter, setSeverityFilter] = useState('All');
 
   const filteredIssues = issues.filter((i) => {
@@ -70,9 +70,9 @@ export const IssueTracker = ({ onOpenModal }) => {
                 <th className="px-6 py-4">Ticket ID & Title</th>
                 <th className="px-4 py-4">Project / App</th>
                 <th className="px-4 py-4">Severity</th>
-                <th className="px-4 py-4">Assignee</th>
+                <th className="px-4 py-4">Assigned Engineer</th>
                 <th className="px-4 py-4">Status</th>
-                <th className="px-4 py-4 text-right">Quick Update</th>
+                <th className="px-4 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60 font-medium">
@@ -92,19 +92,31 @@ export const IssueTracker = ({ onOpenModal }) => {
                       {issue.severity}
                     </span>
                   </td>
-                  <td className="px-4 py-4 text-slate-300">{issue.assignedTo}</td>
+                  <td className="px-4 py-4 text-slate-300 font-semibold">{issue.assignedTo}</td>
                   <td className="px-4 py-4 font-semibold text-indigo-400">{issue.status}</td>
                   <td className="px-4 py-4 text-right">
-                    <select
-                      value={issue.status}
-                      onChange={(e) => updateIssueStatus(issue.id, e.target.value)}
-                      className="glass-input px-2 py-1 rounded-lg bg-slate-900 text-xs"
-                    >
-                      <option value="Open">Open</option>
-                      <option value="In Progress">In Progress</option>
-                      <option value="Resolved">Resolved</option>
-                      <option value="Closed">Closed</option>
-                    </select>
+                    <div className="flex items-center justify-end gap-2">
+                      <select
+                        value={issue.status}
+                        onChange={(e) => updateIssueStatus(issue.id, e.target.value)}
+                        className="glass-input px-2 py-1 rounded-lg bg-slate-900 text-xs font-medium"
+                      >
+                        <option value="Open">Open</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Closed">Closed</option>
+                      </select>
+
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`Delete bug ticket ${issue.id}?`)) deleteIssue(issue.id);
+                        }}
+                        className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 hover:border-rose-500/40 hover:bg-rose-950/40 transition-all"
+                        title="Delete Bug Ticket"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

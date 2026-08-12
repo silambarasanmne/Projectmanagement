@@ -17,7 +17,7 @@ export const AppProvider = ({ children }) => {
   // Default Authentication State: null so Login Page is default landing page
   const [currentUser, setCurrentUser] = useState(() => {
     const savedUser = localStorage.getItem('epm_user');
-    return savedUser ? JSON.parse(savedUser) : null; // Mandatory Landing Page = Login
+    return savedUser ? JSON.parse(savedUser) : null;
   });
 
   // UI States
@@ -30,6 +30,11 @@ export const AppProvider = ({ children }) => {
   const [selectedProjectId, setSelectedProjectId] = useState(null);
 
   // Dynamic Content Data (with persistence)
+  const [companies, setCompanies] = useState(() => {
+    const saved = localStorage.getItem('epm_companies');
+    return saved ? JSON.parse(saved) : DEMO_COMPANIES;
+  });
+
   const [users, setUsers] = useState(() => {
     const saved = localStorage.getItem('epm_users');
     return saved ? JSON.parse(saved) : DEMO_USERS;
@@ -37,11 +42,6 @@ export const AppProvider = ({ children }) => {
 
   const [projects, setProjects] = useState(() => {
     const saved = localStorage.getItem('epm_projects');
-    return saved ? JSON.parse(saved) : []; // Clean empty by default or start fresh
-  });
-
-  const [tasks, setTasks] = useState(() => {
-    const saved = localStorage.getItem('epm_tasks');
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -78,6 +78,10 @@ export const AppProvider = ({ children }) => {
   }, [theme]);
 
   // Persist arrays
+  useEffect(() => {
+    localStorage.setItem('epm_companies', JSON.stringify(companies));
+  }, [companies]);
+
   useEffect(() => {
     localStorage.setItem('epm_users', JSON.stringify(users));
   }, [users]);
@@ -123,11 +127,9 @@ export const AppProvider = ({ children }) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
-  // Auth Operations - Supports dynamic users created with custom passwords!
+  // Auth Operations
   const login = (username, password) => {
     const cleanUsername = username.trim().toLowerCase();
-    
-    // Search across ALL users (including newly created ones)
     const foundUser = users.find(
       (u) => u.username?.toLowerCase() === cleanUsername || u.email?.toLowerCase() === cleanUsername
     );
@@ -136,7 +138,7 @@ export const AppProvider = ({ children }) => {
       setCurrentUser(foundUser);
       localStorage.setItem('epm_user', JSON.stringify(foundUser));
       addToast('success', 'Welcome Back!', `Signed in as ${foundUser.name} (${foundUser.role})`);
-      logActivity(foundUser.name, `User signed in successfully (${foundUser.role})`, 'Security Audit');
+      logActivity(foundUser.name, `User signed in (${foundUser.role})`, 'Security Audit');
       return { success: true, roleKey: foundUser.roleKey };
     } else {
       addToast('error', 'Authentication Failed', 'Invalid username or password credentials.');
@@ -171,7 +173,9 @@ export const AppProvider = ({ children }) => {
     setActivities((prev) => [newAct, ...prev]);
   };
 
-  // Data Mutations
+  // Data Mutations (Create, Update, Delete)
+
+  // 1. Projects
   const addProject = (projectData) => {
     const newProj = {
       id: `proj-${Date.now()}`,
@@ -200,6 +204,24 @@ export const AppProvider = ({ children }) => {
     addToast('info', 'Status Changed', `Project updated to ${newStatus}`);
   };
 
+  const deleteProject = (projectId) => {
+    const targetProj = projects.find(p => p.id === projectId);
+    setProjects(prev => prev.filter(p => p.id !== projectId));
+    // Remove related issues
+    setIssues(prev => prev.filter(i => i.projectId !== projectId));
+    addToast('warning', 'Project Deleted', `Project "${targetProj?.name || 'Item'}" removed.`);
+    logActivity(currentUser?.name, `Deleted project "${targetProj?.name}"`, 'Projects');
+  };
+
+  // 2. Applications
+  const deleteApplication = (appId) => {
+    const targetApp = applications.find(a => a.id === appId);
+    setApplications(prev => prev.filter(a => a.id !== appId));
+    addToast('warning', 'Application Removed', `Application "${targetApp?.name || 'Item'}" deleted.`);
+    logActivity(currentUser?.name, `Deleted application "${targetApp?.name}"`, 'Applications');
+  };
+
+  // 3. Releases
   const addRelease = (releaseData) => {
     const newRel = {
       id: `rel-${Date.now()}`,
@@ -213,6 +235,14 @@ export const AppProvider = ({ children }) => {
     logActivity(currentUser?.name, `Published release ${newRel.version} for ${newRel.appName}`, 'Release Manager');
   };
 
+  const deleteRelease = (releaseId) => {
+    const targetRel = releases.find(r => r.id === releaseId);
+    setReleases(prev => prev.filter(r => r.id !== releaseId));
+    addToast('warning', 'Release Deleted', `Release ${targetRel?.version || 'Item'} removed.`);
+    logActivity(currentUser?.name, `Deleted release ${targetRel?.version}`, 'Release Manager');
+  };
+
+  // 4. Bug & Issues
   const addIssue = (issueData) => {
     const newBug = {
       id: `BUG-${Math.floor(100 + Math.random() * 900)}`,
@@ -234,7 +264,13 @@ export const AppProvider = ({ children }) => {
     addToast('info', 'Issue Updated', `Ticket ${issueId} marked as ${newStatus}`);
   };
 
-  // Add Employee with Password!
+  const deleteIssue = (issueId) => {
+    setIssues(prev => prev.filter(i => i.id !== issueId));
+    addToast('warning', 'Issue Deleted', `Ticket ${issueId} deleted.`);
+    logActivity(currentUser?.name, `Deleted issue ticket ${issueId}`, 'Bug Tracker');
+  };
+
+  // 5. Employees
   const addUser = (userData) => {
     const newUser = {
       id: `usr-${Date.now()}`,
@@ -267,6 +303,44 @@ export const AppProvider = ({ children }) => {
     logActivity(currentUser?.name, `Deleted employee "${targetUser?.name}"`, 'Team Directory');
   };
 
+  // 6. Companies & Cascading Deletion Rule (Deletes Projects, Apps, Releases, Issues — EXCEPT Employees)
+  const deleteCompany = (companyId) => {
+    const targetComp = companies.find(c => c.id === companyId);
+    if (!targetComp) return;
+
+    // Identify project IDs belonging to this company
+    const compProjectIds = projects.filter(p => p.companyId === companyId).map(p => p.id);
+    const compAppNames = applications.filter(a => a.companyId === companyId).map(a => a.name);
+
+    // 1. Delete Company
+    setCompanies(prev => prev.filter(c => c.id !== companyId));
+
+    // 2. Delete Projects belonging to company
+    setProjects(prev => prev.filter(p => p.companyId !== companyId));
+
+    // 3. Delete Applications belonging to company
+    setApplications(prev => prev.filter(a => a.companyId !== companyId));
+
+    // 4. Delete Releases belonging to company's apps
+    setReleases(prev => prev.filter(r => !compAppNames.includes(r.appName)));
+
+    // 5. Delete Issues belonging to company's projects
+    setIssues(prev => prev.filter(i => !compProjectIds.includes(i.projectId)));
+
+    // 6. PRESERVE EMPLOYEES: Set employee company to default/unassigned without deleting employee accounts!
+    setUsers(prev => prev.map(u => {
+      if (u.companyId === companyId) {
+        return { ...u, companyId: 'comp-1' };
+      }
+      return u;
+    }));
+
+    if (activeCompanyId === companyId) setActiveCompanyId('all');
+
+    addToast('warning', 'Company Removed', `Company "${targetComp.name}" deleted. All associated projects, apps, releases, and issues deleted. Employee accounts preserved.`);
+    logActivity(currentUser?.name, `Deleted company "${targetComp.name}" and cascading records (Employees preserved)`, 'Group Companies');
+  };
+
   // Reset / Clear Data Function
   const clearAllData = () => {
     setProjects([]);
@@ -277,10 +351,11 @@ export const AppProvider = ({ children }) => {
     localStorage.removeItem('epm_releases');
     localStorage.removeItem('epm_issues');
     localStorage.removeItem('epm_apps');
-    addToast('info', 'Data Reset', 'All projects, releases, apps, and issue tables cleared for clean setup.');
+    addToast('info', 'Data Reset', 'All workspace tables cleared for clean setup.');
   };
 
   const loadDemoData = () => {
+    setCompanies(DEMO_COMPANIES);
     setProjects(DEMO_PROJECTS);
     setReleases(DEMO_RELEASES);
     setIssues(DEMO_ISSUES);
@@ -317,7 +392,7 @@ export const AppProvider = ({ children }) => {
         toggleTheme,
         activeCompanyId,
         setActiveCompanyId,
-        companies: DEMO_COMPANIES,
+        companies,
         projects: filteredProjects,
         allProjects: projects,
         applications: filteredApplications,
@@ -342,12 +417,17 @@ export const AppProvider = ({ children }) => {
         setSelectedProjectId,
         addProject,
         updateProjectStatus,
+        deleteProject,
+        deleteApplication,
         addRelease,
+        deleteRelease,
         addIssue,
         updateIssueStatus,
+        deleteIssue,
         addUser,
         updateUser,
         deleteUser,
+        deleteCompany,
         clearAllData,
         loadDemoData,
         markAllNotificationsRead,

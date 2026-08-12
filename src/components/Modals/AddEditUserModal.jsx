@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { X, UserPlus, UserCheck, Key, Lock, Sparkles } from 'lucide-react';
+import { X, UserPlus, UserCheck, Key, Sparkles } from 'lucide-react';
 
 export const AddEditUserModal = ({ isOpen, onClose, userToEdit = null }) => {
   const { companies, addUser, updateUser } = useApp();
@@ -87,84 +87,87 @@ export const AddEditUserModal = ({ isOpen, onClose, userToEdit = null }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-lg bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden my-8">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-lg animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-xl bg-slate-900 border border-slate-700/90 rounded-3xl shadow-2xl overflow-hidden my-auto">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/60">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-              {userToEdit ? <UserCheck className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/80">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              {userToEdit ? <UserCheck className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
             </div>
             <div>
-              <h3 className="font-heading text-lg font-bold text-white">
+              <h3 className="font-heading text-lg font-bold text-white leading-tight">
                 {userToEdit ? 'Edit Employee Profile' : 'Create New Employee Account'}
               </h3>
-              <p className="text-xs text-slate-400">Define employee username & login password for authentication</p>
+              <p className="text-xs text-slate-400">Assign employee credentials, role, department & company</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs max-h-[75vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs max-h-[80vh] overflow-y-auto">
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-slate-300 font-medium mb-1">Full Name *</label>
+              <label className="block text-slate-300 font-semibold mb-1">Full Name *</label>
               <input
                 type="text"
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g. Alex Morgan"
-                className="w-full glass-input px-3 py-2 rounded-xl"
+                className="w-full glass-input px-3.5 py-2.5 rounded-xl text-white text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-slate-300 font-medium mb-1">Corporate Email *</label>
+              <label className="block text-slate-300 font-semibold mb-1">Corporate Email *</label>
               <input
                 type="email"
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="alex.morgan@company.com"
-                className="w-full glass-input px-3 py-2 rounded-xl"
+                className="w-full glass-input px-3.5 py-2.5 rounded-xl text-white text-sm"
               />
             </div>
           </div>
 
           {/* Login Credentials Box (Username & Password) */}
-          <div className="p-3.5 rounded-2xl bg-indigo-950/30 border border-indigo-500/20 space-y-3">
-            <div className="flex items-center gap-1.5 text-indigo-300 font-bold text-[11px] uppercase tracking-wider">
-              <Key className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Employee Authentication Credentials</span>
+          <div className="p-4 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 space-y-3">
+            <div className="flex items-center gap-2 text-indigo-300 font-bold text-xs uppercase tracking-wider">
+              <Key className="w-4 h-4 text-indigo-400" />
+              <span>Employee Login Credentials</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Username for Sign In</label>
+                <label className="block text-slate-300 font-semibold mb-1">Username</label>
                 <input
                   type="text"
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                   placeholder="e.g. alex.morgan"
-                  className="w-full glass-input px-3 py-2 rounded-xl text-white font-semibold"
+                  className="w-full glass-input px-3.5 py-2 rounded-xl text-white font-semibold"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Login Password *</label>
+                <label className="block text-slate-300 font-semibold mb-1">Sign In Password *</label>
                 <input
                   type="text"
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   placeholder="Emp@123"
-                  className="w-full glass-input px-3 py-2 rounded-xl text-indigo-300 font-mono font-bold"
+                  className="w-full glass-input px-3.5 py-2 rounded-xl text-indigo-300 font-mono font-bold"
                 />
               </div>
             </div>
@@ -172,35 +175,35 @@ export const AddEditUserModal = ({ isOpen, onClose, userToEdit = null }) => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-slate-300 font-medium mb-1">Designation / Title</label>
+              <label className="block text-slate-300 font-semibold mb-1">Designation / Title</label>
               <input
                 type="text"
                 value={formData.designation}
                 onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
                 placeholder="Senior Software Engineer"
-                className="w-full glass-input px-3 py-2 rounded-xl"
+                className="w-full glass-input px-3.5 py-2.5 rounded-xl text-white"
               />
             </div>
 
             <div>
-              <label className="block text-slate-300 font-medium mb-1">Department</label>
+              <label className="block text-slate-300 font-semibold mb-1">Department</label>
               <input
                 type="text"
                 value={formData.department}
                 onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                 placeholder="Engineering / QA / Product"
-                className="w-full glass-input px-3 py-2 rounded-xl"
+                className="w-full glass-input px-3.5 py-2.5 rounded-xl text-white"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-slate-300 font-medium mb-1">System Access Role</label>
+              <label className="block text-slate-300 font-semibold mb-1">System Access Role</label>
               <select
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="w-full glass-input px-3 py-2 rounded-xl bg-slate-900"
+                className="w-full glass-input px-3.5 py-2.5 rounded-xl bg-slate-900 text-white font-medium"
               >
                 <option value="Super Admin">Super Admin</option>
                 <option value="Project Manager">Project Manager</option>
@@ -211,11 +214,11 @@ export const AddEditUserModal = ({ isOpen, onClose, userToEdit = null }) => {
             </div>
 
             <div>
-              <label className="block text-slate-300 font-medium mb-1">Company Assignment</label>
+              <label className="block text-slate-300 font-semibold mb-1">Company Assignment</label>
               <select
                 value={formData.companyId}
                 onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
-                className="w-full glass-input px-3 py-2 rounded-xl bg-slate-900"
+                className="w-full glass-input px-3.5 py-2.5 rounded-xl bg-slate-900 text-white font-medium"
               >
                 {companies.filter(c => c.id !== 'all').map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
@@ -225,13 +228,13 @@ export const AddEditUserModal = ({ isOpen, onClose, userToEdit = null }) => {
           </div>
 
           <div>
-            <label className="block text-slate-300 font-medium mb-1">Profile Photo Avatar URL</label>
+            <label className="block text-slate-300 font-semibold mb-1">Profile Photo Avatar URL</label>
             <input
               type="url"
               value={formData.avatar}
               onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
               placeholder="https://images.unsplash.com/..."
-              className="w-full glass-input px-3 py-2 rounded-xl"
+              className="w-full glass-input px-3.5 py-2.5 rounded-xl text-white"
             />
           </div>
 
@@ -239,16 +242,16 @@ export const AddEditUserModal = ({ isOpen, onClose, userToEdit = null }) => {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 font-medium"
+              className="px-4 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 font-semibold"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold shadow-lg shadow-emerald-600/30 hover:from-emerald-500 hover:to-teal-500 transition-all"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold shadow-lg shadow-emerald-600/30 hover:from-emerald-500 hover:to-teal-500 transition-all text-xs"
             >
               <Sparkles className="w-4 h-4" />
-              <span>{userToEdit ? 'Save Changes' : 'Create Employee Account'}</span>
+              <span>{userToEdit ? 'Save Employee Profile' : 'Create Employee Account'}</span>
             </button>
           </div>
         </form>

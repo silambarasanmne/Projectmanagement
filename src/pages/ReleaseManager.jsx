@@ -1,9 +1,9 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { Package, Download, Plus, FileCode, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Package, Download, Plus, Trash2 } from 'lucide-react';
 
 export const ReleaseManager = ({ onOpenModal }) => {
-  const { releases } = useApp();
+  const { releases, deleteRelease } = useApp();
 
   return (
     <div className="space-y-6 animate-fade-in pb-12">
@@ -31,7 +31,8 @@ export const ReleaseManager = ({ onOpenModal }) => {
       {/* Release Items List */}
       <div className="space-y-6">
         {releases.map((rel) => (
-          <div key={rel.id} className="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4">
+          <div key={rel.id} className="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4 relative group">
+            
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400 font-bold">
@@ -51,7 +52,7 @@ export const ReleaseManager = ({ onOpenModal }) => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 shrink-0">
+              <div className="flex items-center gap-2 shrink-0">
                 <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                   rel.status === 'Published' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'
                 }`}>
@@ -64,6 +65,16 @@ export const ReleaseManager = ({ onOpenModal }) => {
                 >
                   <Download className="w-4 h-4" />
                   <span>Download Package ({rel.fileSize || '38 MB'})</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (window.confirm(`Delete release ${rel.version} (${rel.appName})?`)) deleteRelease(rel.id);
+                  }}
+                  className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 hover:border-rose-500/40 hover:bg-rose-950/40 transition-all"
+                  title="Delete Release Entry"
+                >
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>

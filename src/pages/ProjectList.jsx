@@ -18,7 +18,7 @@ import {
 import confetti from 'canvas-confetti';
 
 export const ProjectList = ({ onOpenModal }) => {
-  const { projects, navigateTo, updateProjectStatus, addToast, addRelease, currentUser } = useApp();
+  const { projects, navigateTo, updateProjectStatus, deleteProject, addToast, addRelease, currentUser } = useApp();
   
   const [viewMode, setViewMode] = useState('grid');
   const [searchQuery, setSearchQuery] = useState('');
@@ -201,24 +201,36 @@ export const ProjectList = ({ onOpenModal }) => {
                   </div>
                 </div>
 
-                {/* Action Buttons: Start in Process / Move to Release */}
-                <div className="grid grid-cols-2 gap-2 pt-1">
+                {/* Action Buttons: Start in Process / Move to Release / Delete */}
+                <div className="grid grid-cols-3 gap-1.5 pt-1">
                   <button
                     onClick={(e) => handleStartInProcess(e, p)}
                     disabled={p.status === 'In Process'}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-bold bg-indigo-600/20 hover:bg-indigo-600 text-indigo-200 border border-indigo-500/30 transition-all disabled:opacity-40"
+                    className="flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl text-[10px] font-bold bg-indigo-600/20 hover:bg-indigo-600 text-indigo-200 border border-indigo-500/30 transition-all disabled:opacity-40"
                   >
-                    <Play className="w-3.5 h-3.5 fill-indigo-300" />
+                    <Play className="w-3 h-3 fill-indigo-300" />
                     <span>In Process</span>
                   </button>
 
                   <button
                     onClick={(e) => handleMoveToRelease(e, p)}
                     disabled={p.status === 'Release'}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-bold bg-emerald-600/20 hover:bg-emerald-600 text-emerald-200 border border-emerald-500/30 transition-all disabled:opacity-40"
+                    className="flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl text-[10px] font-bold bg-emerald-600/20 hover:bg-emerald-600 text-emerald-200 border border-emerald-500/30 transition-all disabled:opacity-40"
                   >
-                    <Package className="w-3.5 h-3.5" />
+                    <Package className="w-3 h-3" />
                     <span>To Release</span>
+                  </button>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (window.confirm(`Delete project "${p.name}"?`)) deleteProject(p.id);
+                    }}
+                    className="flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl text-[10px] font-bold bg-slate-900 hover:bg-rose-950/60 text-slate-400 hover:text-rose-400 border border-slate-800 hover:border-rose-500/40 transition-all"
+                    title="Delete Project"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    <span>Delete</span>
                   </button>
                 </div>
 

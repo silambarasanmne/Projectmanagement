@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Building, Layers, FolderKanban, Users, Plus, ChevronRight, Shield, ArrowRight } from 'lucide-react';
+import { Building, Layers, FolderKanban, Users, Plus, ChevronRight, Shield, ArrowRight, Trash2 } from 'lucide-react';
 
 export const CompanyList = () => {
-  const { companies, projects, applications, users, navigateTo, setActiveCompanyId } = useApp();
+  const { companies, projects, applications, users, navigateTo, setActiveCompanyId, deleteCompany } = useApp();
   const [selectedCompId, setSelectedCompId] = useState('comp-1');
 
   const filteredCompanies = companies.filter(c => c.id !== 'all');
@@ -18,6 +18,13 @@ export const CompanyList = () => {
     setActiveCompanyId(comp.id);
   };
 
+  const handleDeleteCompany = (e, comp) => {
+    e.stopPropagation();
+    if (window.confirm(`Are you sure you want to delete company "${comp.name}"?\n\nThis will delete all company projects, applications, releases, and issues. Employee accounts will be PRESERVED and kept intact.`)) {
+      deleteCompany(comp.id);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in pb-12">
       
@@ -29,7 +36,7 @@ export const CompanyList = () => {
             <span>Corporate Governance</span>
           </div>
           <h1 className="font-heading text-2xl font-extrabold text-white">Group of Companies Hierarchy</h1>
-          <p className="text-xs text-slate-400 mt-1">Click on Projects, Applications, or Team counts to jump directly into detailed module views.</p>
+          <p className="text-xs text-slate-400 mt-1">Manage corporate entities, departments, and cross-company project allocations.</p>
         </div>
 
         <button
@@ -53,17 +60,26 @@ export const CompanyList = () => {
             <div
               key={comp.id}
               onClick={() => handleCompanySelect(comp)}
-              className={`glass-panel p-6 rounded-3xl border transition-all cursor-pointer ${
+              className={`glass-panel p-6 rounded-3xl border transition-all cursor-pointer relative group/comp ${
                 isSelected
                   ? 'border-indigo-500/80 bg-slate-900/90 shadow-xl shadow-indigo-500/10 ring-1 ring-indigo-500/50'
                   : 'border-slate-800 hover:border-slate-700 bg-slate-900/50'
               }`}
             >
+              {/* Delete Company Button */}
+              <button
+                onClick={(e) => handleDeleteCompany(e, comp)}
+                className="absolute top-5 right-5 p-2 rounded-xl bg-slate-900/80 border border-slate-800 text-slate-400 hover:text-rose-400 hover:border-rose-500/40 hover:bg-rose-950/40 transition-all opacity-80 group-hover/comp:opacity-100"
+                title="Delete Company (Deletes projects/apps, preserves employees)"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+
               <div className="flex items-start justify-between mb-4">
                 <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-2xl">
                   {comp.logo}
                 </div>
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-800 text-indigo-400 border border-slate-700">
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-800 text-indigo-400 border border-slate-700 mr-8">
                   {comp.code}
                 </span>
               </div>
@@ -71,7 +87,7 @@ export const CompanyList = () => {
               <h3 className="font-heading text-lg font-bold text-white">{comp.name}</h3>
               <p className="text-xs text-slate-400 mt-1 mb-4 leading-relaxed">{comp.tagline}</p>
 
-              {/* Clickable Stat Badges with Hover Links */}
+              {/* Clickable Stat Badges */}
               <div className="grid grid-cols-3 gap-2 pt-4 border-t border-slate-800/80 text-center">
                 <div
                   onClick={(e) => {
@@ -83,7 +99,7 @@ export const CompanyList = () => {
                   title="Click to view company projects"
                 >
                   <p className="text-[10px] font-semibold text-slate-400 uppercase group-hover/stat:text-indigo-300">Projects</p>
-                  <p className="font-heading font-extrabold text-lg text-white group-hover/stat:text-indigo-400 mt-0.5 flex items-center justify-center gap-1">
+                  <p className="font-heading font-extrabold text-lg text-white group-hover/stat:text-indigo-400 mt-0.5">
                     {compProjs.length}
                   </p>
                 </div>
@@ -98,7 +114,7 @@ export const CompanyList = () => {
                   title="Click to view company applications"
                 >
                   <p className="text-[10px] font-semibold text-slate-400 uppercase group-hover/stat:text-violet-300">Apps</p>
-                  <p className="font-heading font-extrabold text-lg text-violet-400 mt-0.5 flex items-center justify-center gap-1">
+                  <p className="font-heading font-extrabold text-lg text-violet-400 mt-0.5">
                     {compApps.length}
                   </p>
                 </div>
@@ -113,7 +129,7 @@ export const CompanyList = () => {
                   title="Click to view company team members"
                 >
                   <p className="text-[10px] font-semibold text-slate-400 uppercase group-hover/stat:text-emerald-300">Team</p>
-                  <p className="font-heading font-extrabold text-lg text-emerald-400 mt-0.5 flex items-center justify-center gap-1">
+                  <p className="font-heading font-extrabold text-lg text-emerald-400 mt-0.5">
                     {compTeam.length || comp.teamSize}
                   </p>
                 </div>
@@ -135,7 +151,6 @@ export const CompanyList = () => {
               </div>
             </div>
 
-            {/* Clickable Action Navigation Badges */}
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => {
@@ -175,41 +190,10 @@ export const CompanyList = () => {
             </div>
           </div>
 
-          {/* Departments List */}
-          <div>
-            <h3 className="font-heading text-sm font-bold text-white mb-3">Departments & Functional Units</h3>
-            <div className="flex flex-wrap gap-2">
-              {activeCompanyObj.departments?.map((dept, idx) => (
-                <span
-                  key={idx}
-                  onClick={() => {
-                    setActiveCompanyId(activeCompanyObj.id);
-                    navigateTo('team');
-                  }}
-                  className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-indigo-500/40 text-xs font-semibold text-slate-300 flex items-center gap-2 cursor-pointer transition-all hover:bg-slate-800"
-                  title="Click to view department team"
-                >
-                  <Shield className="w-3.5 h-3.5 text-indigo-400" />
-                  {dept}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Projects under this company */}
+          {/* Company Projects List */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-heading text-sm font-bold text-white">Company Projects List</h3>
-              <button
-                onClick={() => {
-                  setActiveCompanyId(activeCompanyObj.id);
-                  navigateTo('projects');
-                }}
-                className="text-xs text-indigo-400 hover:underline font-semibold flex items-center gap-1"
-              >
-                <span>Browse All Projects</span>
-                <ArrowRight className="w-3 h-3" />
-              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Layers, Globe, Smartphone, Code2, Plus, ExternalLink, CheckCircle2 } from 'lucide-react';
-
+import { Layers, Globe, Smartphone, Code2, Plus, ExternalLink, Trash2 } from 'lucide-react';
 
 export const AppInventory = ({ onOpenModal }) => {
-  const { applications } = useApp();
+  const { applications, deleteApplication } = useApp();
   const [filterType, setFilterType] = useState('All');
 
   const filteredApps = applications.filter(a => {
@@ -55,8 +54,20 @@ export const AppInventory = ({ onOpenModal }) => {
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {filteredApps.map((app) => (
-          <div key={app.id} className="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4 hover:border-violet-500/40 transition-all">
-            <div className="flex items-start justify-between">
+          <div key={app.id} className="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4 hover:border-violet-500/40 transition-all relative group">
+            
+            {/* Delete App Button */}
+            <button
+              onClick={() => {
+                if (window.confirm(`Delete application "${app.name}"?`)) deleteApplication(app.id);
+              }}
+              className="absolute top-5 right-5 p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 hover:border-rose-500/40 hover:bg-rose-950/40 transition-all"
+              title="Delete Application"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+
+            <div className="flex items-start justify-between pr-10">
               <div>
                 <span className="text-xs font-semibold text-violet-400">{app.type}</span>
                 <h3 className="font-heading text-xl font-bold text-white mt-0.5">{app.name}</h3>
