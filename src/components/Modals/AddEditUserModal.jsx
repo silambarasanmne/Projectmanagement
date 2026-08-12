@@ -87,11 +87,12 @@ export const AddEditUserModal = ({ isOpen, onClose, userToEdit = null }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-lg animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-xl bg-slate-900 border border-slate-700/90 rounded-3xl shadow-2xl overflow-hidden my-auto">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-lg animate-fade-in">
+      {/* Modal Box: Fixed Max Height & Flex Column layout */}
+      <div className="relative w-full max-w-lg bg-slate-900 border border-slate-700/90 rounded-3xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[85vh]">
         
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/80">
+        {/* Header - Fixed Top (Shrink-0) */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/90 shrink-0 z-10">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
               {userToEdit ? <UserCheck className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
@@ -111,134 +112,140 @@ export const AddEditUserModal = ({ isOpen, onClose, userToEdit = null }) => {
           </button>
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs max-h-[80vh] overflow-y-auto">
+        {/* Form Container with flex-1 and scrollable body */}
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden">
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-slate-300 font-semibold mb-1">Full Name *</label>
-              <input
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g. Alex Morgan"
-                className="w-full glass-input px-3.5 py-2.5 rounded-xl text-white text-sm"
-              />
-            </div>
-
-            <div>
-              <label className="block text-slate-300 font-semibold mb-1">Corporate Email *</label>
-              <input
-                type="email"
-                required
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="alex.morgan@company.com"
-                className="w-full glass-input px-3.5 py-2.5 rounded-xl text-white text-sm"
-              />
-            </div>
-          </div>
-
-          {/* Login Credentials Box (Username & Password) */}
-          <div className="p-4 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 space-y-3">
-            <div className="flex items-center gap-2 text-indigo-300 font-bold text-xs uppercase tracking-wider">
-              <Key className="w-4 h-4 text-indigo-400" />
-              <span>Employee Login Credentials</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Scrollable Fields Body */}
+          <div className="p-6 space-y-4 text-xs overflow-y-auto flex-1">
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Username</label>
-                <input
-                  type="text"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  placeholder="e.g. alex.morgan"
-                  className="w-full glass-input px-3.5 py-2 rounded-xl text-white font-semibold"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Sign In Password *</label>
+                <label className="block text-slate-300 font-semibold mb-1">Full Name *</label>
                 <input
                   type="text"
                   required
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="Emp@123"
-                  className="w-full glass-input px-3.5 py-2 rounded-xl text-indigo-300 font-mono font-bold"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="e.g. Alex Morgan"
+                  className="w-full glass-input px-3.5 py-2.5 rounded-xl text-white text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Corporate Email *</label>
+                <input
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="alex.morgan@company.com"
+                  className="w-full glass-input px-3.5 py-2.5 rounded-xl text-white text-sm"
                 />
               </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Login Credentials Box (Username & Password) */}
+            <div className="p-4 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 space-y-3">
+              <div className="flex items-center gap-2 text-indigo-300 font-bold text-xs uppercase tracking-wider">
+                <Key className="w-4 h-4 text-indigo-400" />
+                <span>Employee Login Credentials</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Username</label>
+                  <input
+                    type="text"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    placeholder="e.g. alex.morgan"
+                    className="w-full glass-input px-3.5 py-2 rounded-xl text-white font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Sign In Password *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="Emp@123"
+                    className="w-full glass-input px-3.5 py-2 rounded-xl text-indigo-300 font-mono font-bold"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Designation / Title</label>
+                <input
+                  type="text"
+                  value={formData.designation}
+                  onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+                  placeholder="Senior Software Engineer"
+                  className="w-full glass-input px-3.5 py-2.5 rounded-xl text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Department</label>
+                <input
+                  type="text"
+                  value={formData.department}
+                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                  placeholder="Engineering / QA / Product"
+                  className="w-full glass-input px-3.5 py-2.5 rounded-xl text-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">System Access Role</label>
+                <select
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  className="w-full glass-input px-3.5 py-2.5 rounded-xl bg-slate-900 text-white font-medium"
+                >
+                  <option value="Super Admin">Super Admin</option>
+                  <option value="Project Manager">Project Manager</option>
+                  <option value="Developer">Developer / Employee</option>
+                  <option value="QA Lead">QA Lead</option>
+                  <option value="UI/UX Designer">UI/UX Designer</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Company Assignment</label>
+                <select
+                  value={formData.companyId}
+                  onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
+                  className="w-full glass-input px-3.5 py-2.5 rounded-xl bg-slate-900 text-white font-medium"
+                >
+                  {companies.filter(c => c.id !== 'all').map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Designation / Title</label>
+              <label className="block text-slate-300 font-semibold mb-1">Profile Photo Avatar URL</label>
               <input
-                type="text"
-                value={formData.designation}
-                onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-                placeholder="Senior Software Engineer"
+                type="url"
+                value={formData.avatar}
+                onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
+                placeholder="https://images.unsplash.com/..."
                 className="w-full glass-input px-3.5 py-2.5 rounded-xl text-white"
               />
             </div>
 
-            <div>
-              <label className="block text-slate-300 font-semibold mb-1">Department</label>
-              <input
-                type="text"
-                value={formData.department}
-                onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                placeholder="Engineering / QA / Product"
-                className="w-full glass-input px-3.5 py-2.5 rounded-xl text-white"
-              />
-            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-slate-300 font-semibold mb-1">System Access Role</label>
-              <select
-                value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="w-full glass-input px-3.5 py-2.5 rounded-xl bg-slate-900 text-white font-medium"
-              >
-                <option value="Super Admin">Super Admin</option>
-                <option value="Project Manager">Project Manager</option>
-                <option value="Developer">Developer / Employee</option>
-                <option value="QA Lead">QA Lead</option>
-                <option value="UI/UX Designer">UI/UX Designer</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-slate-300 font-semibold mb-1">Company Assignment</label>
-              <select
-                value={formData.companyId}
-                onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
-                className="w-full glass-input px-3.5 py-2.5 rounded-xl bg-slate-900 text-white font-medium"
-              >
-                {companies.filter(c => c.id !== 'all').map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-slate-300 font-semibold mb-1">Profile Photo Avatar URL</label>
-            <input
-              type="url"
-              value={formData.avatar}
-              onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
-              placeholder="https://images.unsplash.com/..."
-              className="w-full glass-input px-3.5 py-2.5 rounded-xl text-white"
-            />
-          </div>
-
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+          {/* STICKY FOOTER - ALWAYS VISIBLE AT BOTTOM OF MODAL */}
+          <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/95 flex items-center justify-end gap-3 shrink-0 z-10">
             <button
               type="button"
               onClick={onClose}
@@ -254,6 +261,7 @@ export const AddEditUserModal = ({ isOpen, onClose, userToEdit = null }) => {
               <span>{userToEdit ? 'Save Employee Profile' : 'Create Employee Account'}</span>
             </button>
           </div>
+
         </form>
 
       </div>
