@@ -37,12 +37,19 @@ export const ProjectList = ({ onOpenModal }) => {
 
   const getStatusBadge = (status) => {
     switch (status) {
+      case 'Development':
       case 'In Process':
         return 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40';
+      case 'Testing Assigned':
+      case 'Testing In Progress':
       case 'Testing':
         return 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+      case 'Release Pending':
+      case 'Testing Passed':
       case 'Testing Completed':
         return 'bg-teal-500/20 text-teal-300 border-teal-500/40';
+      case 'Released':
+      case 'Production':
       case 'Release':
       case 'Completed':
         return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
@@ -62,7 +69,7 @@ export const ProjectList = ({ onOpenModal }) => {
             <span>Lifecycle Governance</span>
           </div>
           <h1 className="font-heading text-2xl font-extrabold text-white">Project Governance Workspace</h1>
-          <p className="text-xs text-slate-400 mt-1">Track projects through In Process ➔ Testing (Assign QA) ➔ Release (Production URL).</p>
+          <p className="text-xs text-slate-400 mt-1">Development ➔ Testing Assigned ➔ Testing In Progress ➔ Release Pending ➔ Released.</p>
         </div>
 
         <button
@@ -82,14 +89,14 @@ export const ProjectList = ({ onOpenModal }) => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search projects by name or responsible manager..."
+            placeholder="Search projects by name, manager or tester..."
             className="w-full glass-input pl-10 pr-4 py-2 rounded-xl text-xs"
           />
         </div>
 
         <div className="flex items-center gap-2 text-xs overflow-x-auto pb-1">
           <span className="text-slate-400 font-semibold shrink-0">Filter Status:</span>
-          {['All', 'In Process', 'Testing', 'Testing Completed', 'Release'].map((st) => (
+          {['All', 'Development', 'Testing Assigned', 'Testing In Progress', 'Release Pending', 'Released'].map((st) => (
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
@@ -169,68 +176,85 @@ export const ProjectList = ({ onOpenModal }) => {
                 </div>
               </div>
 
-              {/* Action Buttons — Sequential Lifecycle */}
+              {/* Action Buttons — Strict Permission Flow */}
               <div className="flex items-center gap-2 pt-2 border-t border-slate-800/80">
                 
-                {/* New / Pending → Start In Process */}
-                {p.status !== 'In Process' && p.status !== 'Testing' && p.status !== 'Testing Completed' && p.status !== 'Release' && p.status !== 'Completed' && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      updateProjectStatus(p.id, 'In Process');
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold bg-indigo-600/20 hover:bg-indigo-600 text-indigo-200 border border-indigo-500/30 transition-all cursor-pointer"
-                    title="Start In Process"
-                  >
-                    <Play className="w-3 h-3 fill-indigo-300" />
-                    <span>Start In Process</span>
-                  </button>
-                )}
-
-                {/* In Process → Move to Testing */}
-                {p.status === 'In Process' && (
+                {/* 1. Development Phase → Submit for Testing */}
+                {(p.status === 'Development' || p.status === 'In Process' || !p.status) && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setTestingModalProject(p);
                     }}
                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold bg-amber-600/20 hover:bg-amber-600 text-amber-200 border border-amber-500/30 transition-all cursor-pointer"
-                    title="Move to Testing & Assign QA Employee"
+                    title="Submit for Testing & Assign QA Employee"
                   >
                     <TestTube className="w-3 h-3" />
-                    <span>Move to Testing</span>
+                    <span>Submit for Testing</span>
                   </button>
                 )}
 
-                {/* Testing Phase */}
-                {p.status === 'Testing' && (
+                {/* 2. Testing Assigned / Testing In Progress Phase */}
+                {(p.status === 'Testing Assigned' || p.status === 'Testing In Progress' || p.status === 'Testing') && (
                   <>
-                    {(isAssignedTester || currentUser?.roleKey === 'admin' || currentUser?.name === p.assignedTesterName) ? (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          updateProjectStatus(p.id, 'Testing Completed', {
-                            testedBy: currentUser?.name || 'Tester',
-                            completedTestingAt: new Date().toISOString()
-                          }, 85);
-                          addNotification({
-                            targetUserId: p.developerId || 'admin',
-                            targetUserName: p.developerName || 'Developer',
-                            fromUser: currentUser?.name || 'Tester',
-                            title: 'Testing Completed',
-                            message: `Testing completed for "${p.name}" — Application is ready for release.`,
-                            type: 'testing_completed',
-                            projectId: p.id
-                          });
-                          addToast('success', 'Testing Completed!', `Testing for "${p.name}" completed.`);
-                          logActivity(currentUser?.name, `Marked testing completed for "${p.name}"`, 'Projects');
-                        }}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold bg-teal-600/20 hover:bg-teal-600 text-teal-200 border border-teal-500/30 transition-all cursor-pointer"
-                        title="Mark Testing Completed"
-                      >
-                        <CheckCircle2 className="w-3 h-3 text-teal-300" />
-                        <span>Testing Completed</span>
-                      </button>
+                    {isAssignedTester ? (
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateProjectStatus(p.id, 'Release Pending', {
+                              testedBy: currentUser?.name || 'Tester',
+                              testResult: 'Passed',
+                              completedTestingAt: new Date().toISOString()
+                            }, 85);
+                            addNotification({
+                              targetUserId: p.developerId || 'admin',
+                              targetUserName: p.developerName || p.manager || 'Developer',
+                              fromUser: currentUser?.name || 'Tester',
+                              title: 'Testing Passed',
+                              message: `Testing passed for "${p.name}". Ready for release.`,
+                              type: 'testing_completed',
+                              projectId: p.id
+                            });
+                            addToast('success', 'Testing Passed!', `Testing for "${p.name}" passed.`);
+                            logActivity(currentUser?.name, `Passed testing for "${p.name}"`, 'Projects');
+                          }}
+                          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[10px] font-bold bg-emerald-600/20 hover:bg-emerald-600 text-emerald-200 border border-emerald-500/30 transition-all cursor-pointer"
+                          title="Pass Testing"
+                        >
+                          <CheckCircle2 className="w-3 h-3 text-emerald-300" />
+                          <span>Pass</span>
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const reason = window.prompt("Specify Testing Failure Reason:", "QA verification failed.");
+                            if (reason === null) return;
+
+                            updateProjectStatus(p.id, 'Development', {
+                              testResult: 'Failed',
+                              failedReason: reason,
+                              lastFailedAt: new Date().toISOString()
+                            }, 30);
+                            addNotification({
+                              targetUserId: p.developerId || 'admin',
+                              targetUserName: p.developerName || p.manager || 'Developer',
+                              fromUser: currentUser?.name || 'Tester',
+                              title: 'Testing Failed',
+                              message: `Testing failed for "${p.name}". Returned for rework.`,
+                              type: 'testing_failed',
+                              projectId: p.id
+                            });
+                            addToast('warning', 'Testing Failed', `"${p.name}" returned for rework.`);
+                            logActivity(currentUser?.name, `Failed testing for "${p.name}"`, 'Projects');
+                          }}
+                          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[10px] font-bold bg-rose-600/20 hover:bg-rose-600 text-rose-200 border border-rose-500/30 transition-all cursor-pointer"
+                          title="Fail Testing & Request Rework"
+                        >
+                          <span>Fail</span>
+                        </button>
+                      </div>
                     ) : (
                       <span className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20">
                         <TestTube className="w-3 h-3 animate-pulse" />
@@ -240,23 +264,23 @@ export const ProjectList = ({ onOpenModal }) => {
                   </>
                 )}
 
-                {/* Testing Completed → Move to Release */}
-                {p.status === 'Testing Completed' && (
+                {/* 3. Release Pending Phase → Review & Release */}
+                {(p.status === 'Release Pending' || p.status === 'Testing Passed' || p.status === 'Testing Completed') && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setReleaseModalProject(p);
                     }}
                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold bg-emerald-600/20 hover:bg-emerald-600 text-emerald-200 border border-emerald-500/30 transition-all cursor-pointer"
-                    title="Move to Release & Specify Production URL"
+                    title="Review & Release to Production"
                   >
                     <Package className="w-3 h-3" />
-                    <span>Move to Release</span>
+                    <span>Review & Release</span>
                   </button>
                 )}
 
-                {/* Released — Completed badge */}
-                {(p.status === 'Release' || p.status === 'Completed') && (
+                {/* 4. Released Phase */}
+                {(p.status === 'Released' || p.status === 'Production' || p.status === 'Release' || p.status === 'Completed') && (
                   <span className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold bg-emerald-600/15 text-emerald-300 border border-emerald-500/30">
                     <CheckCircle2 className="w-3 h-3" />
                     <span>Released</span>

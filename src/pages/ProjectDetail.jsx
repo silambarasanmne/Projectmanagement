@@ -74,9 +74,16 @@ export const ProjectDetail = () => {
   // Phase-aware status colors
   const getPhaseStyle = (phase) => {
     switch (phase) {
+      case 'Development':
       case 'In Process': return { bg: 'bg-indigo-500/15', text: 'text-indigo-400', border: 'border-indigo-500/30', icon: Clock };
-      case 'Testing': return { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30', icon: TestTube };
+      case 'Testing Assigned': return { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30', icon: UserCheck };
+      case 'Testing In Progress':
+      case 'Testing': return { bg: 'bg-amber-500/15', text: 'text-amber-300', border: 'border-amber-500/30', icon: TestTube };
+      case 'Release Pending':
+      case 'Testing Passed':
       case 'Testing Completed': return { bg: 'bg-teal-500/15', text: 'text-teal-300', border: 'border-teal-500/30', icon: CheckCircle2 };
+      case 'Released':
+      case 'Production':
       case 'Release': 
       case 'Completed': return { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30', icon: CheckCircle2 };
       default: return { bg: 'bg-slate-800', text: 'text-slate-300', border: 'border-slate-700', icon: Clock };
@@ -86,33 +93,70 @@ export const ProjectDetail = () => {
   const phaseStyle = getPhaseStyle(project.status);
   const PhaseIcon = phaseStyle.icon;
 
-  // Lifecycle Pipeline Steps (4-stage workflow)
+  // Lifecycle Pipeline Steps
   const pipelineSteps = [
-    { key: 'In Process', label: 'In Process', icon: Play, color: 'indigo' },
-    { key: 'Testing', label: 'Testing', icon: TestTube, color: 'amber' },
-    { key: 'Testing Completed', label: 'Testing Completed', icon: CheckCircle2, color: 'teal' },
-    { key: 'Release', label: 'Release', icon: Package, color: 'emerald' }
+    { key: 'Development', label: 'Development', icon: Play, color: 'indigo' },
+    { key: 'Testing Assigned', label: 'Testing Assigned', icon: UserCheck, color: 'amber' },
+    { key: 'Testing In Progress', label: 'Testing In Progress', icon: TestTube, color: 'amber' },
+    { key: 'Release Pending', label: 'Release Pending', icon: CheckCircle2, color: 'teal' },
+    { key: 'Released', label: 'Released', icon: Package, color: 'emerald' }
   ];
-  const currentStepIndex = pipelineSteps.findIndex(s => s.key === project.status);
 
-  const handleMarkTestingCompleted = () => {
-    updateProjectStatus(project.id, 'Testing Completed', {
+  // Helper to map aliases to standard pipeline index
+  const getStepIndex = (status) => {
+    if (status === 'In Process' || status === 'Development') return 0;
+    if (status === 'Testing Assigned') return 1;
+    if (status === 'Testing In Progress' || status === 'Testing') return 2;
+    if (status === 'Release Pending' || status === 'Testing Passed' || status === 'Testing Completed') return 3;
+    if (status === 'Released' || status === 'Production' || status === 'Release' || status === 'Completed') return 4;
+    return 0;
+  };
+  const currentStepIndex = getStepIndex(project.status);
+
+  // Tester Handlers
+  const handleTestingPassed = () => {
+    updateProjectStatus(project.id, 'Release Pending', {
       testedBy: currentUser?.name || 'Assigned Tester',
+      testResult: 'Passed',
       completedTestingAt: new Date().toISOString()
     }, 85);
 
     addNotification({
       targetUserId: project.developerId || 'admin',
-      targetUserName: project.developerName || 'Developer',
+      targetUserName: project.developerName || project.manager || 'Developer',
       fromUser: currentUser?.name || 'Assigned Tester',
-      title: 'Testing Completed',
-      message: `Testing completed for "${project.name}" — Application is ready for release.`,
+      title: 'Testing Passed',
+      message: `Testing passed for "${project.name}" by ${currentUser?.name}. Application moved to Release Pending.`,
       type: 'testing_completed',
       projectId: project.id
     });
 
-    addToast('success', 'Testing Completed! 🎉', `Project "${project.name}" QA testing completed.`);
-    logActivity(currentUser?.name, `Marked testing completed for project "${project.name}"`, 'Projects');
+    addToast('success', 'Testing Passed! 🎉', `Project "${project.name}" passed QA testing. Ready for release review.`);
+    logActivity(currentUser?.name, `Passed testing for project "${project.name}" (Status: Release Pending)`, 'Projects');
+  };
+
+  const handleTestingFailed = () => {
+    const reason = window.prompt("Specify Testing Failure Notes / Rework Requirements:", "UI alignment issues & API error handling failed during QA.");
+    if (reason === null) return;
+
+    updateProjectStatus(project.id, 'Development', {
+      testResult: 'Failed',
+      failedReason: reason,
+      lastFailedAt: new Date().toISOString()
+    }, 30);
+
+    addNotification({
+      targetUserId: project.developerId || 'admin',
+      targetUserName: project.developerName || project.manager || 'Developer',
+      fromUser: currentUser?.name || 'Assigned Tester',
+      title: 'Testing Failed (Rework)',
+      message: `Testing failed for "${project.name}". Notes: ${reason}. Moved back to Development for rework.`,
+      type: 'testing_failed',
+      projectId: project.id
+    });
+
+    addToast('warning', 'Testing Failed — Returned for Rework', `Project "${project.name}" returned to Development phase.`);
+    logActivity(currentUser?.name, `Failed testing for project "${project.name}" (Notes: ${reason})`, 'Projects');
   };
 
   return (
@@ -154,70 +198,80 @@ export const ProjectDetail = () => {
                 <span>Assigned QA Tester: <strong className="text-white">{project.assignedTesterName}</strong></span>
               </div>
             )}
+            {project.testResult === 'Failed' && project.failedReason && (
+              <div className="mt-2 p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-xs text-rose-300">
+                <strong>⚠️ Previous Testing Failed:</strong> {project.failedReason}
+              </div>
+            )}
           </div>
 
-          {/* Phase-Aware Action Buttons: Sequential Workflow */}
+          {/* Phase-Aware Action Buttons: Strict Permission Enforcement */}
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
             
-            {/* 1. Show "Start in Process" only when pending */}
-            {project.status !== 'In Process' && project.status !== 'Testing' && project.status !== 'Testing Completed' && project.status !== 'Release' && project.status !== 'Completed' && (
-              <button
-                onClick={() => {
-                  updateProjectStatus(project.id, 'In Process', {}, 30);
-                  addToast('success', 'Status Updated', `"${project.name}" started In Process.`);
-                }}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
-              >
-                <Play className="w-4 h-4 fill-white" />
-                <span>Start in Process</span>
-              </button>
-            )}
-
-            {/* 2. Show "Move to Testing" when In Process */}
-            {project.status === 'In Process' && (
+            {/* 1. Development Phase */}
+            {(project.status === 'Development' || project.status === 'In Process' || !project.status) && (
               <button
                 onClick={() => setTestingModalOpen(true)}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs shadow-lg shadow-amber-600/30 transition-all cursor-pointer"
               >
                 <TestTube className="w-4 h-4" />
-                <span>Move to Testing</span>
+                <span>Submit for Testing & Assign Tester</span>
               </button>
             )}
 
-            {/* 3. When in Testing phase: */}
-            {project.status === 'Testing' && (
+            {/* 2. Testing Assigned / Testing In Progress Phase */}
+            {(project.status === 'Testing Assigned' || project.status === 'Testing In Progress' || project.status === 'Testing') && (
               <>
-                {/* If user is the assigned tester or Super Admin / assigned testing user, show Testing Completed */}
-                {(isAssignedTester || currentUser?.roleKey === 'admin' || currentUser?.name === project.assignedTesterName) ? (
-                  <button
-                    onClick={handleMarkTestingCompleted}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold text-xs shadow-lg shadow-teal-600/30 transition-all cursor-pointer"
-                  >
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Testing Completed</span>
-                  </button>
+                {/* Rule: If user is assigned tester, they get ONLY testing actions (Passed/Failed), even if Super Admin */}
+                {isAssignedTester ? (
+                  <div className="flex items-center gap-2">
+                    {project.status === 'Testing Assigned' && (
+                      <button
+                        onClick={() => updateProjectStatus(project.id, 'Testing In Progress', {}, 65)}
+                        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-lg shadow-amber-600/30 transition-all cursor-pointer"
+                      >
+                        <TestTube className="w-4 h-4" />
+                        <span>Start Testing</span>
+                      </button>
+                    )}
+
+                    <button
+                      onClick={handleTestingPassed}
+                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Testing Passed (Release Pending)</span>
+                    </button>
+
+                    <button
+                      onClick={handleTestingFailed}
+                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold text-xs shadow-lg shadow-rose-600/30 transition-all cursor-pointer"
+                    >
+                      <span>❌ Testing Failed (Rework)</span>
+                    </button>
+                  </div>
                 ) : (
                   <span className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/10 text-amber-300 border border-amber-500/30 text-xs font-semibold">
                     <TestTube className="w-4 h-4 animate-pulse" />
-                    <span>QA Testing in Progress ({project.assignedTesterName || 'QA Team'})</span>
+                    <span>QA Testing in Progress ({project.assignedTesterName || 'Assigned QA'})</span>
                   </span>
                 )}
               </>
             )}
 
-            {/* 4. When Testing Completed: Developer/Admin sees Move to Release */}
-            {project.status === 'Testing Completed' && (
+            {/* 3. Release Pending Phase */}
+            {(project.status === 'Release Pending' || project.status === 'Testing Passed' || project.status === 'Testing Completed') && (
               <button
                 onClick={() => setReleaseModalOpen(true)}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
               >
                 <Package className="w-4 h-4" />
-                <span>Move to Release & Add URL</span>
+                <span>Review & Move to Release</span>
               </button>
             )}
 
-            {/* 5. Show completion badge when Released */}
-            {(project.status === 'Release' || project.status === 'Completed') && (
+            {/* 4. Released / Production Phase */}
+            {(project.status === 'Released' || project.status === 'Production' || project.status === 'Release' || project.status === 'Completed') && (
               <span className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold">
                 <CheckCircle2 className="w-4 h-4" />
                 <span>✅ Released to Production</span>

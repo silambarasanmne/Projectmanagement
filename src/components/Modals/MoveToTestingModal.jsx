@@ -15,7 +15,7 @@ export const MoveToTestingModal = ({ isOpen, onClose, project }) => {
     const testerName = selectedUserObj?.name || assignedTester || 'QA Lead';
     const testerId = selectedUserObj?.id || '';
 
-    updateProjectStatus(project.id, 'Testing', {
+    updateProjectStatus(project.id, 'Testing Assigned', {
       assignedTesterId: testerId,
       assignedTesterName: testerName,
       testingNotes: testingNotes,

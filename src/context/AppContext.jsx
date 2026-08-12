@@ -259,10 +259,11 @@ export const AppProvider = ({ children }) => {
   const updateProjectStatus = (id, newStatus, extraData = {}, newProgress) => {
     // Auto-calculate progress based on phase if not explicitly provided
     const autoProgress = newProgress !== undefined ? newProgress : (
-      newStatus === 'In Process' ? 30 :
-      newStatus === 'Testing' ? 70 :
-      newStatus === 'Testing Completed' ? 85 :
-      newStatus === 'Release' || newStatus === 'Completed' ? 100 : 0
+      newStatus === 'Development' || newStatus === 'In Process' ? 30 :
+      newStatus === 'Testing Assigned' ? 50 :
+      newStatus === 'Testing In Progress' || newStatus === 'Testing' ? 65 :
+      newStatus === 'Release Pending' || newStatus === 'Testing Passed' || newStatus === 'Testing Completed' ? 85 :
+      newStatus === 'Released' || newStatus === 'Production' || newStatus === 'Release' || newStatus === 'Completed' ? 100 : 0
     );
 
     setProjects((prev) =>
