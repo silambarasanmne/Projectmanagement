@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Shield, Lock, User, ArrowRight, Building, Sparkles } from 'lucide-react';
+import { Lock, User, ArrowRight, Building } from 'lucide-react';
 
 export const LoginPage = () => {
   const { login } = useApp();
@@ -19,22 +19,12 @@ export const LoginPage = () => {
     }, 400);
   };
 
-  const handleQuickDemoLogin = (userKey, passKey) => {
-    setUsername(userKey);
-    setPassword(passKey);
-    setIsLoading(true);
-    setTimeout(() => {
-      login(userKey, passKey);
-      setIsLoading(false);
-    }, 300);
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0B0F19] text-slate-100 p-4 relative overflow-hidden selection:bg-indigo-600 selection:text-white">
       
       {/* Background Glow Orbs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-violet-600/15 rounded-full blur-3xl pointer-events-none" />
 
       <div className="w-full max-w-md glass-panel p-8 rounded-3xl border border-slate-800 shadow-2xl relative z-10 space-y-6">
         
@@ -44,10 +34,10 @@ export const LoginPage = () => {
             <Building className="w-7 h-7" />
           </div>
           <h1 className="font-heading text-2xl font-extrabold text-white tracking-tight">Enterprise Group PM</h1>
-          <p className="text-xs text-slate-400">Corporate Multi-Company Management Portal</p>
+          <p className="text-xs text-slate-400">Corporate Multi-Company Governance Portal</p>
         </div>
 
-        {/* Login Form */}
+        {/* Clean Login Form */}
         <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs">
           
           <div>
@@ -59,7 +49,7 @@ export const LoginPage = () => {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="e.g. admin"
+                placeholder="Enter your username"
                 className="w-full glass-input pl-10 pr-4 py-2.5 rounded-xl text-white font-medium text-sm"
               />
             </div>
@@ -83,7 +73,7 @@ export const LoginPage = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold shadow-lg shadow-indigo-600/30 hover:from-indigo-500 hover:to-violet-500 transition-all text-xs"
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold shadow-lg shadow-indigo-600/30 hover:from-indigo-500 hover:to-violet-500 transition-all text-xs cursor-pointer"
           >
             {isLoading ? (
               <span>Authenticating...</span>
@@ -95,21 +85,6 @@ export const LoginPage = () => {
             )}
           </button>
         </form>
-
-        {/* Super User Quick Login Button */}
-        <div className="pt-4 border-t border-slate-800 space-y-2">
-          <p className="text-[11px] text-slate-400 font-semibold text-center uppercase tracking-wider">Super User Credentials</p>
-          <button
-            onClick={() => handleQuickDemoLogin('admin', 'Admin@123')}
-            className="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-indigo-950/60 border border-slate-800 hover:border-indigo-500/40 text-xs font-semibold text-indigo-300 flex items-center justify-between transition-all"
-          >
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-indigo-400" />
-              <span>Super Admin (`admin`)</span>
-            </div>
-            <span className="font-mono text-[10px] text-slate-400">Admin@123</span>
-          </button>
-        </div>
 
       </div>
     </div>

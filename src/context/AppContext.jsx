@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { 
   DEMO_USERS, 
   DEMO_COMPANIES, 
@@ -13,12 +13,12 @@ import {
 
 const AppContext = createContext();
 
+// Inactivity Auto-Logout Timeout: 15 Minutes (in milliseconds)
+const INACTIVITY_TIMEOUT = 15 * 60 * 1000;
+
 export const AppProvider = ({ children }) => {
-  // Default Authentication State: null so Login Page is default landing page
-  const [currentUser, setCurrentUser] = useState(() => {
-    const savedUser = localStorage.getItem('epm_user');
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
+  // Always start on Login Screen on page reload/launch
+  const [currentUser, setCurrentUser] = useState(null);
 
   // UI States
   const [activeCompanyId, setActiveCompanyId] = useState('all');
@@ -64,6 +64,9 @@ export const AppProvider = ({ children }) => {
   const [notifications, setNotifications] = useState(DEMO_NOTIFICATIONS);
   const [toasts, setToasts] = useState([]);
 
+  // Inactivity Auto-Logout Timer Ref
+  const idleTimerRef = useRef(null);
+
   // Theme sync
   useEffect(() => {
     const root = document.documentElement;
@@ -77,7 +80,7 @@ export const AppProvider = ({ children }) => {
     localStorage.setItem('epm_theme', theme);
   }, [theme]);
 
-  // Persist arrays
+  // Persist data arrays
   useEffect(() => {
     localStorage.setItem('epm_companies', JSON.stringify(companies));
   }, [companies]);
@@ -136,7 +139,6 @@ export const AppProvider = ({ children }) => {
 
     if (foundUser && (foundUser.passwordHash === password || foundUser.password === password)) {
       setCurrentUser(foundUser);
-      localStorage.setItem('epm_user', JSON.stringify(foundUser));
       addToast('success', 'Welcome Back!', `Signed in as ${foundUser.name} (${foundUser.role})`);
       logActivity(foundUser.name, `User signed in (${foundUser.role})`, 'Security Audit');
       return { success: true, roleKey: foundUser.roleKey };
@@ -146,14 +148,48 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = (reason = 'user') => {
     if (currentUser) {
-      logActivity(currentUser.name, 'User signed out', 'Security Audit');
+      logActivity(currentUser.name, reason === 'inactivity' ? 'Auto-logged out due to inactivity' : 'User signed out', 'Security Audit');
     }
     setCurrentUser(null);
-    localStorage.removeItem('epm_user');
-    addToast('info', 'Signed Out', 'You have been signed out.');
+    if (reason === 'inactivity') {
+      addToast('warning', 'Session Expired', 'You have been automatically logged out due to inactivity.');
+    } else {
+      addToast('info', 'Signed Out', 'You have been signed out.');
+    }
   };
+
+  // Inactivity Auto-Logout Mechanism
+  useEffect(() => {
+    if (!currentUser) {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      return;
+    }
+
+    const resetIdleTimer = () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = setTimeout(() => {
+        logout('inactivity');
+      }, INACTIVITY_TIMEOUT);
+    };
+
+    // User activity event listeners
+    const activityEvents = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'];
+    activityEvents.forEach((event) => {
+      window.addEventListener(event, resetIdleTimer);
+    });
+
+    // Start timer on login
+    resetIdleTimer();
+
+    return () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      activityEvents.forEach((event) => {
+        window.removeEventListener(event, resetIdleTimer);
+      });
+    };
+  }, [currentUser]);
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
@@ -173,9 +209,7 @@ export const AppProvider = ({ children }) => {
     setActivities((prev) => [newAct, ...prev]);
   };
 
-  // Data Mutations (Create, Update, Delete)
-
-  // 0. Companies
+  // Data Mutations
   const addCompany = (companyData) => {
     const newComp = {
       id: `comp-${Date.now()}`,
@@ -191,7 +225,6 @@ export const AppProvider = ({ children }) => {
     logActivity(currentUser?.name, `Created subsidiary company "${newComp.name}"`, 'Group Companies');
   };
 
-  // 1. Projects
   const addProject = (projectData) => {
     const newProj = {
       id: `proj-${Date.now()}`,
@@ -223,13 +256,11 @@ export const AppProvider = ({ children }) => {
   const deleteProject = (projectId) => {
     const targetProj = projects.find(p => p.id === projectId);
     setProjects(prev => prev.filter(p => p.id !== projectId));
-    // Remove related issues
     setIssues(prev => prev.filter(i => i.projectId !== projectId));
     addToast('warning', 'Project Deleted', `Project "${targetProj?.name || 'Item'}" removed.`);
     logActivity(currentUser?.name, `Deleted project "${targetProj?.name}"`, 'Projects');
   };
 
-  // 2. Applications
   const deleteApplication = (appId) => {
     const targetApp = applications.find(a => a.id === appId);
     setApplications(prev => prev.filter(a => a.id !== appId));
@@ -237,7 +268,6 @@ export const AppProvider = ({ children }) => {
     logActivity(currentUser?.name, `Deleted application "${targetApp?.name}"`, 'Applications');
   };
 
-  // 3. Releases
   const addRelease = (releaseData) => {
     const newRel = {
       id: `rel-${Date.now()}`,
@@ -258,7 +288,6 @@ export const AppProvider = ({ children }) => {
     logActivity(currentUser?.name, `Deleted release ${targetRel?.version}`, 'Release Manager');
   };
 
-  // 4. Bug & Issues
   const addIssue = (issueData) => {
     const newBug = {
       id: `BUG-${Math.floor(100 + Math.random() * 900)}`,
@@ -286,7 +315,6 @@ export const AppProvider = ({ children }) => {
     logActivity(currentUser?.name, `Deleted issue ticket ${issueId}`, 'Bug Tracker');
   };
 
-  // 5. Employees
   const addUser = (userData) => {
     const newUser = {
       id: `usr-${Date.now()}`,
@@ -319,31 +347,19 @@ export const AppProvider = ({ children }) => {
     logActivity(currentUser?.name, `Deleted employee "${targetUser?.name}"`, 'Team Directory');
   };
 
-  // 6. Companies & Cascading Deletion Rule (Deletes Projects, Apps, Releases, Issues — EXCEPT Employees)
   const deleteCompany = (companyId) => {
     const targetComp = companies.find(c => c.id === companyId);
     if (!targetComp) return;
 
-    // Identify project IDs belonging to this company
     const compProjectIds = projects.filter(p => p.companyId === companyId).map(p => p.id);
     const compAppNames = applications.filter(a => a.companyId === companyId).map(a => a.name);
 
-    // 1. Delete Company
     setCompanies(prev => prev.filter(c => c.id !== companyId));
-
-    // 2. Delete Projects belonging to company
     setProjects(prev => prev.filter(p => p.companyId !== companyId));
-
-    // 3. Delete Applications belonging to company
     setApplications(prev => prev.filter(a => a.companyId !== companyId));
-
-    // 4. Delete Releases belonging to company's apps
     setReleases(prev => prev.filter(r => !compAppNames.includes(r.appName)));
-
-    // 5. Delete Issues belonging to company's projects
     setIssues(prev => prev.filter(i => !compProjectIds.includes(i.projectId)));
 
-    // 6. PRESERVE EMPLOYEES: Set employee company to default/unassigned without deleting employee accounts!
     setUsers(prev => prev.map(u => {
       if (u.companyId === companyId) {
         return { ...u, companyId: 'comp-1' };
@@ -353,11 +369,10 @@ export const AppProvider = ({ children }) => {
 
     if (activeCompanyId === companyId) setActiveCompanyId('all');
 
-    addToast('warning', 'Company Removed', `Company "${targetComp.name}" deleted. All associated projects, apps, releases, and issues deleted. Employee accounts preserved.`);
-    logActivity(currentUser?.name, `Deleted company "${targetComp.name}" and cascading records (Employees preserved)`, 'Group Companies');
+    addToast('warning', 'Company Removed', `Company "${targetComp.name}" deleted. Associated projects, apps, releases, and issues deleted. Employee accounts preserved.`);
+    logActivity(currentUser?.name, `Deleted company "${targetComp.name}" (Employees preserved)`, 'Group Companies');
   };
 
-  // Reset / Clear Data Function
   const clearAllData = () => {
     setProjects([]);
     setReleases([]);
@@ -431,11 +446,10 @@ export const AppProvider = ({ children }) => {
         navigateTo,
         selectedProjectId,
         setSelectedProjectId,
+        addCompany,
         addProject,
         updateProjectStatus,
         deleteProject,
-        addCompany,
-        deleteCompany,
         deleteApplication,
         addRelease,
         deleteRelease,
