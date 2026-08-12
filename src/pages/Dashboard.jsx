@@ -14,7 +14,9 @@ import {
   Sparkles,
   Package,
   Activity,
-  TestTube
+  TestTube,
+  Globe,
+  ExternalLink
 } from 'lucide-react';
 
 export const Dashboard = ({ onOpenModal }) => {
@@ -31,9 +33,12 @@ export const Dashboard = ({ onOpenModal }) => {
 
   const activeCompanies = companies.filter(c => c.id !== 'all');
   const totalProjects = allProjects.length;
-  const inProcessProjects = allProjects.filter(p => p.status === 'In Process').length;
-  const testingProjects = allProjects.filter(p => p.status === 'Testing').length;
-  const releaseProjects = allProjects.filter(p => p.status === 'Release' || p.status === 'Completed').length;
+  const inProcessProjects = allProjects.filter(p => p.status === 'In Process' || p.status === 'Development').length;
+  const testingProjects = allProjects.filter(p => p.status === 'Testing' || p.status === 'Testing Assigned' || p.status === 'Testing In Progress').length;
+  const releasePendingProjects = allProjects.filter(p => p.status === 'Release Pending' || p.status === 'Testing Passed' || p.status === 'Testing Completed').length;
+  const releasedProjects = allProjects.filter(p => p.status === 'Released' || p.status === 'Production' || p.status === 'Release' || p.status === 'Completed').length;
+
+  const releasedList = allProjects.filter(p => p.status === 'Released' || p.status === 'Production' || p.status === 'Release' || p.status === 'Completed');
 
   return (
     <div className="space-y-6 animate-fade-in pb-12">
@@ -54,7 +59,7 @@ export const Dashboard = ({ onOpenModal }) => {
             </h1>
             
             <p className="text-xs sm:text-sm text-slate-400 max-w-xl leading-relaxed">
-              Real-time portfolio metrics across {activeCompanies.length} subsidiary companies, software development progress, and live APK releases.
+              Real-time portfolio metrics across {activeCompanies.length} subsidiary companies, software development progress, and live production releases.
             </p>
           </div>
 
@@ -112,7 +117,7 @@ export const Dashboard = ({ onOpenModal }) => {
             title="Managed Projects"
             value={totalProjects}
             icon={FolderKanban}
-            subtitle={`${inProcessProjects} Process • ${testingProjects} Testing • ${releaseProjects} Released`}
+            subtitle={`${inProcessProjects} Process • ${testingProjects} Testing • ${releasedProjects} Released`}
             trend="Click to View Projects"
             color="violet"
           />
@@ -195,7 +200,7 @@ export const Dashboard = ({ onOpenModal }) => {
                 <p className="text-xs text-slate-400">Production deployed</p>
               </div>
             </div>
-            <span className="font-heading font-extrabold text-2xl text-emerald-400">{releaseProjects}</span>
+            <span className="font-heading font-extrabold text-2xl text-emerald-400">{releasedProjects}</span>
           </div>
 
           <button
@@ -208,6 +213,78 @@ export const Dashboard = ({ onOpenModal }) => {
         </div>
 
       </div>
+
+      {/* Live Released Projects & Production Deployments Feed */}
+      {releasedList.length > 0 && (
+        <div className="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-heading font-bold text-white text-base leading-tight">🚀 Live Production Releases</h3>
+                <p className="text-xs text-slate-400">Recently deployed applications ready for access</p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => navigateTo('releases')}
+              className="text-xs text-emerald-400 hover:underline font-semibold cursor-pointer flex items-center gap-1"
+            >
+              <span>View Release Hub</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {releasedList.map((relProj) => {
+              const liveUrl = relProj.releaseUrl || relProj.productionUrl || relProj.testingUrl || `https://app.${relProj.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
+              return (
+                <div
+                  key={relProj.id}
+                  onClick={() => navigateTo('project-detail', relProj.id)}
+                  className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-emerald-500/40 transition-all cursor-pointer flex flex-col justify-between space-y-3"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>Released</span>
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-400">{relProj.version || 'v1.0.0'}</span>
+                    </div>
+
+                    <h4 className="font-heading text-sm font-bold text-white mt-2 hover:text-emerald-300 transition-colors">
+                      {relProj.name}
+                    </h4>
+                    <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">{relProj.description}</p>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-medium text-emerald-400 flex items-center gap-1 truncate font-mono">
+                      <Globe className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">{liveUrl}</span>
+                    </span>
+
+                    <a
+                      href={liveUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="px-2.5 py-1 rounded-lg bg-emerald-600/25 hover:bg-emerald-600 text-emerald-200 hover:text-white border border-emerald-500/40 text-[10px] font-bold flex items-center gap-1 transition-all shrink-0 cursor-pointer shadow-sm"
+                      title="Launch Production App"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      <span>Launch App</span>
+                    </a>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Analytics & Activity Log */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -256,3 +333,4 @@ export const Dashboard = ({ onOpenModal }) => {
     </div>
   );
 };
+

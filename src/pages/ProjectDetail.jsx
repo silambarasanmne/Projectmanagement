@@ -4,19 +4,14 @@ import { MoveToTestingModal } from '../components/Modals/MoveToTestingModal';
 import { MoveToReleaseModal } from '../components/Modals/MoveToReleaseModal';
 import { 
   ArrowLeft, 
-  Calendar, 
   User, 
   Milestone, 
   Activity, 
   FileText, 
   Globe, 
-  Code2, 
-  Server, 
-  Plus, 
   CheckCircle2, 
   Clock, 
   Download,
-  Upload,
   Play,
   Package,
   UserCheck,
@@ -199,16 +194,17 @@ export const ProjectDetail = () => {
               </div>
             )}
             {project.testingUrl && (
-              <div className="mt-3 p-3 rounded-2xl bg-amber-950/30 border border-amber-500/30 flex items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2 text-amber-200">
+              <div className="mt-3 p-3 rounded-2xl bg-amber-950/30 border border-amber-500/30 flex items-center justify-between gap-3 text-xs flex-wrap sm:flex-nowrap">
+                <div className="flex items-center gap-2 text-amber-200 min-w-0 truncate">
                   <Globe className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>Staging Testing URL: <strong className="text-white font-mono">{project.testingUrl}</strong></span>
+                  <span className="truncate">Staging Testing URL: <strong className="text-white font-mono">{project.testingUrl}</strong></span>
                 </div>
                 <a
                   href={project.testingUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-600/30 transition-all shrink-0 cursor-pointer"
+                  className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-[11px] flex items-center gap-1.5 shadow-md shadow-amber-600/30 transition-all shrink-0 cursor-pointer ml-auto"
+                  title="Open App for Testing"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   <span>Open App for Testing</span>
@@ -217,80 +213,70 @@ export const ProjectDetail = () => {
             )}
             {project.testResult === 'Failed' && project.failedReason && (
               <div className="mt-2 p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-xs text-rose-300">
-                <strong>⚠️ Previous Testing Failed:</strong> {project.failedReason}
+                <strong>❌ Previous Testing Failed:</strong> {project.failedReason}
               </div>
             )}
           </div>
 
-          {/* Phase-Aware Action Buttons: Strict Permission Enforcement */}
+          {/* Phase-Aware Action Buttons */}
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
             
             {/* 1. Development Phase */}
             {(project.status === 'Development' || project.status === 'In Process' || !project.status) && (
               <button
                 onClick={() => setTestingModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs shadow-lg shadow-amber-600/30 transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs shadow-md shadow-amber-600/30 transition-all cursor-pointer"
               >
-                <TestTube className="w-4 h-4" />
+                <TestTube className="w-3.5 h-3.5" />
                 <span>Submit for Testing & Assign Tester</span>
               </button>
             )}
 
             {/* 2. Testing Assigned / Testing In Progress Phase */}
             {(project.status === 'Testing Assigned' || project.status === 'Testing In Progress' || project.status === 'Testing') && (
-              <>
-                {/* Rule: If user is assigned tester, they get ONLY testing actions (Passed/Failed), even if Super Admin */}
-                {isAssignedTester ? (
-                  <div className="flex items-center gap-2">
-                    {project.status === 'Testing Assigned' && (
-                      <button
-                        onClick={() => updateProjectStatus(project.id, 'Testing In Progress', {}, 65)}
-                        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-lg shadow-amber-600/30 transition-all cursor-pointer"
-                      >
-                        <TestTube className="w-4 h-4" />
-                        <span>Start Testing</span>
-                      </button>
-                    )}
-
-                    <button
-                      onClick={handleTestingPassed}
-                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
-                    >
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Testing Passed (Release Pending)</span>
-                    </button>
-
-                    <button
-                      onClick={handleTestingFailed}
-                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold text-xs shadow-lg shadow-rose-600/30 transition-all cursor-pointer"
-                    >
-                      <span>❌ Testing Failed (Rework)</span>
-                    </button>
-                  </div>
-                ) : (
-                  <span className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/10 text-amber-300 border border-amber-500/30 text-xs font-semibold">
-                    <TestTube className="w-4 h-4 animate-pulse" />
-                    <span>QA Testing in Progress ({project.assignedTesterName || 'Assigned QA'})</span>
-                  </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                {project.status === 'Testing Assigned' && (
+                  <button
+                    onClick={() => updateProjectStatus(project.id, 'Testing In Progress', {}, 65)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-md shadow-amber-600/30 transition-all cursor-pointer"
+                  >
+                    <TestTube className="w-3.5 h-3.5" />
+                    <span>Testing In Progress</span>
+                  </button>
                 )}
-              </>
+
+                <button
+                  onClick={handleTestingPassed}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-600/30 transition-all cursor-pointer"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>✅ Testing Passed (Release Pending)</span>
+                </button>
+
+                <button
+                  onClick={handleTestingFailed}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold text-xs shadow-md shadow-rose-600/30 transition-all cursor-pointer"
+                >
+                  <span>❌ Testing Failed (Rework)</span>
+                </button>
+              </div>
             )}
 
             {/* 3. Release Pending Phase */}
             {(project.status === 'Release Pending' || project.status === 'Testing Passed' || project.status === 'Testing Completed') && (
               <button
                 onClick={() => setReleaseModalOpen(true)}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-600/30 transition-all cursor-pointer"
               >
-                <Package className="w-4 h-4" />
+                <Package className="w-3.5 h-3.5" />
                 <span>Review & Move to Release</span>
               </button>
             )}
 
             {/* 4. Released / Production Phase */}
             {(project.status === 'Released' || project.status === 'Production' || project.status === 'Release' || project.status === 'Completed') && (
-              <span className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold">
-                <CheckCircle2 className="w-4 h-4" />
+              <span className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold">
+                <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>✅ Released to Production</span>
               </span>
             )}

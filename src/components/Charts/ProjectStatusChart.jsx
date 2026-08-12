@@ -5,39 +5,29 @@ import { Doughnut } from 'react-chartjs-2';
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 export const ProjectStatusChart = ({ projects = [] }) => {
-  // Count statuses
-  const statusCounts = {
-    'In Progress': projects.filter(p => p.status === 'In Progress').length,
-    'Testing': projects.filter(p => p.status === 'Testing').length,
-    'UAT': projects.filter(p => p.status === 'UAT').length,
-    'Completed': projects.filter(p => p.status === 'Completed').length,
-    'Planning': projects.filter(p => p.status === 'Planning').length,
-  };
+  const devCount = projects.filter(p => p.status === 'Development' || p.status === 'In Process').length;
+  const testingCount = projects.filter(p => p.status === 'Testing Assigned' || p.status === 'Testing In Progress' || p.status === 'Testing').length;
+  const releasePendingCount = projects.filter(p => p.status === 'Release Pending' || p.status === 'Testing Passed' || p.status === 'Testing Completed').length;
+  const releasedCount = projects.filter(p => p.status === 'Released' || p.status === 'Production' || p.status === 'Release' || p.status === 'Completed').length;
+
+  const total = devCount + testingCount + releasePendingCount + releasedCount;
 
   const data = {
-    labels: ['In Progress', 'Testing / QA', 'UAT Integration', 'Completed', 'Planning'],
+    labels: ['Development', 'Testing In Progress', 'Release Pending', 'Released to Production'],
     datasets: [
       {
-        data: [
-          statusCounts['In Progress'] || 12,
-          statusCounts['Testing'] || 5,
-          statusCounts['UAT'] || 3,
-          statusCounts['Completed'] || 18,
-          statusCounts['Planning'] || 4,
-        ],
+        data: total > 0 ? [devCount, testingCount, releasePendingCount, releasedCount] : [0, 0, 0, 0],
         backgroundColor: [
           'rgba(99, 102, 241, 0.85)', // Indigo
-          'rgba(168, 85, 247, 0.85)', // Purple
-          'rgba(6, 182, 212, 0.85)',  // Cyan
-          'rgba(16, 185, 129, 0.85)', // Emerald
-          'rgba(245, 158, 11, 0.85)'  // Amber
+          'rgba(245, 158, 11, 0.85)', // Amber
+          'rgba(20, 184, 166, 0.85)', // Teal
+          'rgba(16, 185, 129, 0.85)'  // Emerald
         ],
         borderColor: [
           '#6366f1',
-          '#a855f7',
-          '#06b6d4',
-          '#10b981',
-          '#f59e0b'
+          '#f59e0b',
+          '#14b8a6',
+          '#10b981'
         ],
         borderWidth: 1.5,
         hoverOffset: 6

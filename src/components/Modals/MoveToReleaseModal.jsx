@@ -17,7 +17,7 @@ export const MoveToReleaseModal = ({ isOpen, onClose, project }) => {
     const urlToSave = releaseUrl.trim() || `https://app.${project.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
 
     // 1. Update Project Status to Released and 100% progress
-    updateProjectStatus(project.id, 'Released', {}, 100);
+    updateProjectStatus(project.id, 'Released', { releaseUrl: urlToSave, version: version }, 100);
 
     // 2. Automatically log Release in APK Release Hub with Production URL!
     addRelease({

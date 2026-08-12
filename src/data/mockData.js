@@ -57,7 +57,56 @@ export const DEMO_COMPANIES = [
   }
 ];
 
-export const DEMO_PROJECTS = [];
+export const DEMO_PROJECTS = [
+  {
+    id: 'proj-101',
+    name: 'Enterprise ERP Suite v2.4',
+    companyId: 'comp-1',
+    companyName: 'Apex Tech Solutions',
+    description: 'Core financial governance and resource planning module with real-time analytics.',
+    status: 'Testing In Progress',
+    progress: 65,
+    manager: 'Super Admin',
+    assignedTesterId: 'usr-1',
+    assignedTesterName: 'Super Admin',
+    platform: 'Web Application',
+    testingUrl: 'https://staging.erp.apexgroup.com',
+    dueDate: '2026-09-15',
+    lastUpdated: '2026-08-12 14:00'
+  },
+  {
+    id: 'proj-102',
+    name: 'Mobile Banking Portal (APK & iOS)',
+    companyId: 'comp-2',
+    companyName: 'Nexus Digital Systems',
+    description: 'Secure native mobile banking application supporting biometrics and transaction alerts.',
+    status: 'Release Pending',
+    progress: 85,
+    manager: 'Super Admin',
+    assignedTesterId: 'usr-1',
+    assignedTesterName: 'Super Admin',
+    platform: 'Android & iOS',
+    testingUrl: 'https://staging-banking.nexusdigital.com',
+    dueDate: '2026-08-30',
+    lastUpdated: '2026-08-12 11:30'
+  },
+  {
+    id: 'proj-103',
+    name: 'Zero-Trust Shield Gateway',
+    companyId: 'comp-3',
+    companyName: 'CyberPulse Security',
+    description: 'Intrusion detection system and automated pentesting protocol analyzer.',
+    status: 'Development',
+    progress: 30,
+    manager: 'Super Admin',
+    assignedTesterId: '',
+    assignedTesterName: '',
+    platform: 'Cloud Infrastructure',
+    testingUrl: 'https://staging.cyberpulse.io',
+    dueDate: '2026-10-01',
+    lastUpdated: '2026-08-11 16:45'
+  }
+];
 export const DEMO_TASKS = [];
 export const DEMO_APPLICATIONS = [];
 export const DEMO_RELEASES = [];
